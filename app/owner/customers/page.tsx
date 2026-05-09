@@ -1,0 +1,64 @@
+"use client";
+
+import Link from "next/link";
+import { BarChart3, Home, Package, Settings, ShoppingCart, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+const customers = [
+  { name: "Rajesh Kumar", email: "rajesh@example.com", city: "Chennai", orders: 8 },
+  { name: "Priya Sharma", email: "priya@example.com", city: "Coimbatore", orders: 5 },
+  { name: "Mohammed Ali", email: "mohammed@example.com", city: "Madurai", orders: 3 },
+];
+
+export default function OwnerCustomersPage() {
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <OwnerNav active="customers" />
+        <section className="rounded-2xl border bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
+          <p className="mt-1 text-sm text-gray-500">View customer activity and order counts.</p>
+          <div className="mt-6 overflow-hidden rounded-xl border">
+            {customers.map((customer) => (
+              <div key={customer.email} className="flex flex-col gap-2 border-b p-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-gray-800">{customer.name}</p>
+                  <p className="text-sm text-gray-500">{customer.email} - {customer.city}</p>
+                </div>
+                <Badge>{customer.orders} orders</Badge>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function OwnerNav({ active }: { active: string }) {
+  const links = [
+    { href: "/owner/dashboard", label: "Dashboard", icon: Home, key: "dashboard" },
+    { href: "/owner/products", label: "Products", icon: Package, key: "products" },
+    { href: "/owner/orders", label: "Orders", icon: ShoppingCart, key: "orders" },
+    { href: "/owner/customers", label: "Customers", icon: Users, key: "customers" },
+    { href: "/owner/reports", label: "Reports", icon: BarChart3, key: "reports" },
+    { href: "/owner/settings", label: "Settings", icon: Settings, key: "settings" },
+  ];
+
+  return (
+    <nav className="mb-6 flex flex-wrap gap-2">
+      {links.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${
+            active === link.key ? "bg-slate-900 text-white" : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          <link.icon className="h-4 w-4" />
+          {link.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}

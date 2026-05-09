@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BowPaw</string>
+    <string name="title_activity_main">BowPaw</string>
+    <string name="package_name">com.thisai.bowpaw</string>
+    <string name="custom_url_scheme">com.thisai.bowpaw</string>
+</resources>

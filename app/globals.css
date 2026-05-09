@@ -1,0 +1,1039 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: Arial, Helvetica, sans-serif;
+    --font-playfair: Georgia, "Times New Roman", serif;
+    --font-space: "Segoe UI", Arial, Helvetica, sans-serif;
+
+    /* 🌊 Clean White Theme for Fish & Birds Pet Shop */
+    --background: 210 40% 98%;
+    --foreground: 210 40% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 40% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 40% 10%;
+    
+    /* 🐠 Primary - Ocean Blue (Fish) */
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* 🦜 Secondary - Tropical Orange (Birds) */
+    --secondary: 25 95% 53%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* 🌿 Accent - Emerald Green */
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+    
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 199 89% 48%;
+    --radius: 0.75rem;
+    
+    /* 🐠 Fish Colors */
+    --fish-blue: 199 89% 48%;
+    --fish-cyan: 187 92% 69%;
+    --fish-teal: 174 72% 56%;
+    --fish-deep: 201 96% 32%;
+    
+    /* 🦜 Bird Colors */
+    --bird-orange: 25 95% 53%;
+    --bird-yellow: 45 93% 47%;
+    --bird-red: 0 84% 60%;
+    --bird-green: 142 76% 36%;
+    
+    /* 🎨 Accent Colors */
+    --coral: 16 100% 66%;
+    --gold: 45 93% 47%;
+    --emerald: 160 84% 39%;
+    --purple: 262 83% 58%;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 25 95% 53%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 199 89% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-md border border-white/10;
+  }
+  
+  /* 🐠 Fish/Aquatic Gradients */
+  .fish-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #22d3ee 100%);
+  }
+  
+  .ocean-gradient {
+    background: linear-gradient(180deg, #0284c7 0%, #0ea5e9 100%);
+  }
+  
+  .deep-sea-gradient {
+    background: linear-gradient(180deg, #0c4a6e 0%, #0369a1 50%, #0ea5e9 100%);
+  }
+  
+  .aqua-gradient {
+    background: linear-gradient(135deg, #06b6d4 0%, #14b8a6 50%, #10b981 100%);
+  }
+  
+  /* 🦜 Bird/Tropical Gradients */
+  .bird-gradient {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%);
+  }
+  
+  .tropical-gradient {
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #fbbf24 100%);
+  }
+  
+  .sunset-gradient {
+    background: linear-gradient(180deg, #f97316 0%, #ef4444 100%);
+  }
+  
+  /* 🎨 Combined Pet Theme */
+  .pet-gradient {
+    background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 25%, #22c55e 50%, #f97316 75%, #ef4444 100%);
+  }
+  
+  .pet-text-gradient {
+    background: linear-gradient(90deg, #0ea5e9, #14b8a6, #22c55e, #f97316, #ef4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* 🌊 White Background Patterns */
+  .bg-pattern-dots {
+    background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  
+  .bg-pattern-grid {
+    background-image: 
+      linear-gradient(to right, #f1f5f9 1px, transparent 1px),
+      linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  
+  .bg-pattern-waves {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928.955.383 1.869.74 2.75 1.072h6.225c-2.51-.73-5.139-1.691-8.233-2.928C65.888 13.278 60.562 12 50 12c-10.626 0-16.855 1.397-26.66 5.063l-1.767.662c-2.475.923-4.66 1.674-6.724 2.275h6.335zm0-20C13.258 2.892 8.077 4 0 4V2c5.744 0 9.951-.574 14.85-2h6.334zM77.38 0C85.239 2.966 90.502 4 100 4V2c-6.842 0-11.386-.542-16.396-2h-6.225zM0 14c8.44 0 13.718-1.21 22.272-4.402l1.768-.661C33.64 5.347 39.647 4 50 4c10.271 0 15.362 1.222 24.629 4.928C84.112 12.722 89.438 14 100 14v-2c-10.271 0-15.362-1.222-24.629-4.928C65.888 3.278 60.562 2 50 2 39.374 2 33.145 3.397 23.34 7.063l-1.767.662C13.223 10.84 8.163 12 0 12v2z' fill='%230ea5e9' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+  }
+  
+  .bg-pattern-fish {
+    background-image: url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230ea5e9' fill-opacity='0.06'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  
+  /* Soft Shadows for Cards */
+  .shadow-soft {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  }
+  
+  .shadow-soft-lg {
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  }
+  
+  .shadow-soft-xl {
+    box-shadow: 0 20px 40px -4px rgba(0, 0, 0, 0.1), 0 8px 16px -4px rgba(0, 0, 0, 0.04);
+  }
+  
+  /* Glow Effects for Light Theme */
+  .fish-glow {
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.25),
+                0 8px 40px rgba(6, 182, 212, 0.15);
+  }
+  
+  .bird-glow {
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.25),
+                0 8px 40px rgba(251, 146, 60, 0.15);
+  }
+  
+  .aqua-glow {
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.25),
+                0 8px 40px rgba(20, 184, 166, 0.15);
+  }
+  
+  .ocean-gradient-radial {
+    background: radial-gradient(ellipse at center, #0ea5e9 0%, #0284c7 70%);
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+  
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.6) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite linear;
+  }
+  
+  .pet-border {
+    border-image: linear-gradient(90deg, #0ea5e9, #14b8a6, #22c55e, #f97316, #ef4444) 1;
+  }
+  
+  /* Glass Effect for Light Theme */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Custom scrollbar with aquatic theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0ea5e9, #0284c7);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #38bdf8, #0ea5e9);
+}
+
+/* Animation keyframes */
+@keyframes swim-left {
+  0% { transform: translateX(100vw) scaleX(-1); }
+  100% { transform: translateX(-100%) scaleX(-1); }
+}
+
+@keyframes swim-right {
+  0% { transform: translateX(-100%) scaleX(1); }
+  100% { transform: translateX(100vw) scaleX(1); }
+}
+
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(100%) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(2deg); }
+  75% { transform: translateY(5px) rotate(-2deg); }
+}
+
+@keyframes wave-motion {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-10px) rotate(-5deg); }
+  75% { transform: translateX(10px) rotate(5deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.5);
+  }
+}
+
+@keyframes rainbow-shift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+@keyframes aurora {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(-25%) rotate(-5deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(25%) rotate(5deg);
+  }
+}
+
+.animate-swim-left {
+  animation: swim-left 20s linear infinite;
+}
+
+.animate-swim-right {
+  animation: swim-right 18s linear infinite;
+}
+
+.animate-bubble {
+  animation: bubble-rise 6s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-wave-motion {
+  animation: wave-motion 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-rainbow {
+  animation: rainbow-shift 10s linear infinite;
+}
+
+.animate-aurora {
+  animation: aurora 8s ease-in-out infinite;
+}
+
+/* Swiper custom styles */
+.swiper-pagination-bullet {
+  background: #cbd5e1;
+  opacity: 1;
+}
+
+.swiper-pagination-bullet-active {
+  background: #0ea5e9;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  color: #0ea5e9;
+}
+
+/* Hide scrollbar for carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply bg-muted animate-pulse rounded;
+}
+
+/* Product card hover effect */
+.product-card {
+  @apply transition-all duration-300;
+}
+
+.product-card:hover {
+  @apply -translate-y-2 shadow-xl;
+}
+
+.product-card:hover .product-image {
+  @apply scale-110;
+}
+
+/* Mega menu animation */
+.mega-menu {
+  @apply opacity-0 invisible translate-y-2 transition-all duration-200;
+}
+
+.mega-menu.active,
+.nav-item:hover .mega-menu {
+  @apply opacity-100 visible translate-y-0;
+}
+
+/* Mobile bottom sheet */
+.bottom-sheet {
+  @apply fixed inset-x-0 bottom-0 bg-background rounded-t-3xl shadow-2xl z-50;
+  @apply transform transition-transform duration-300;
+}
+
+.bottom-sheet.closed {
+  @apply translate-y-full;
+}
+
+/* Toast animations */
+.toast-enter {
+  @apply animate-in slide-in-from-right fade-in;
+}
+
+.toast-exit {
+  @apply animate-out slide-out-to-right fade-out;
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+}
+
+/* 🐠 Fish Button */
+.btn-fish {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+  transition: all 0.3s ease;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-fish:hover {
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 🦜 Bird Button */
+.btn-bird {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+  transition: all 0.3s ease;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-bird:hover {
+  box-shadow: 0 8px 30px rgba(249, 115, 22, 0.4);
+  transform: translateY(-2px);
+}
+
+/* 🎨 Pet Gradient Button */
+.btn-pet {
+  background: linear-gradient(90deg, #0ea5e9, #14b8a6, #22c55e, #f97316);
+  background-size: 200% 100%;
+  animation: gradient-shift 3s ease infinite;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.btn-aqua {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+  transition: all 0.3s ease;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-aqua:hover {
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ==================== CAROUSEL STYLES ==================== */
+
+/* Smooth Carousel Container */
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Carousel Card Effects */
+.carousel-card {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity;
+}
+
+.carousel-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 25px 50px -12px rgba(14, 165, 233, 0.2),
+              0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* 3D Stack Carousel */
+.stack3d-container {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.stack3d-card {
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+}
+
+/* Drag Carousel */
+.drag-carousel {
+  cursor: grab;
+  user-select: none;
+}
+
+.drag-carousel:active {
+  cursor: grabbing;
+}
+
+.drag-carousel * {
+  pointer-events: none;
+}
+
+.drag-carousel a,
+.drag-carousel button {
+  pointer-events: auto;
+}
+
+/* Coverflow Effect */
+.coverflow-swiper .swiper-slide {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.coverflow-swiper .swiper-slide-active {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.coverflow-swiper .swiper-slide:not(.swiper-slide-active) {
+  opacity: 0.7;
+  filter: brightness(0.8);
+}
+
+/* Carousel Navigation Buttons */
+.carousel-nav-btn {
+  @apply w-12 h-12 rounded-full flex items-center justify-center;
+  @apply bg-card/90 backdrop-blur-sm border border-border;
+  @apply shadow-lg transition-all duration-300;
+}
+
+.carousel-nav-btn:hover {
+  @apply scale-110;
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
+}
+
+.carousel-nav-btn:active {
+  @apply scale-95;
+}
+
+/* Carousel Pagination */
+.carousel-pagination .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: hsl(var(--muted-foreground));
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.carousel-pagination .swiper-pagination-bullet-active {
+  background: #0ea5e9;
+  opacity: 1;
+  width: 28px;
+  border-radius: 5px;
+}
+
+/* Smooth Scroll Momentum */
+.momentum-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Card Glow Effect */
+.card-glow {
+  position: relative;
+}
+
+.card-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), transparent, rgba(20, 184, 166, 0.2));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.card-glow:hover::after {
+  opacity: 1;
+}
+
+/* Carousel Loading State */
+.carousel-skeleton {
+  @apply bg-muted rounded-2xl;
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Carousel Drag Handle Indicator */
+.drag-indicator {
+  @apply flex items-center justify-center gap-2;
+  @apply text-muted-foreground text-sm;
+  animation: fade-bounce 2s ease-in-out infinite;
+}
+
+@keyframes fade-bounce {
+  0%, 100% { opacity: 0.5; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
+}
+
+/* Mobile Carousel Touch Optimization */
+@media (hover: none) {
+  .carousel-card:hover {
+    transform: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .carousel-nav-btn {
+    @apply w-10 h-10;
+  }
+}
+
+/* Prevent Image Dragging in Carousel */
+.carousel-container img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  -webkit-touch-callout: none;
+}
+
+/* ==================== IMAGE FIT UTILITIES ==================== */
+
+/* Ensure images fit properly in all cards */
+.image-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.image-container img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* Product Card Image Container */
+.product-image-container {
+  @apply relative w-full overflow-hidden bg-gray-50;
+  aspect-ratio: 1 / 1;
+}
+
+.product-image-container img,
+.product-image-container > div {
+  @apply absolute inset-0 w-full h-full;
+}
+
+.product-image-container img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Category Card Image */
+.category-image-container {
+  @apply relative w-full overflow-hidden;
+  aspect-ratio: 4 / 3;
+}
+
+.category-image-container img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Hero/Banner Images */
+.hero-image-container {
+  @apply relative w-full overflow-hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.hero-image-container img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Square Image Container */
+.square-image {
+  @apply relative w-full overflow-hidden;
+  aspect-ratio: 1 / 1;
+}
+
+.square-image img {
+  @apply absolute inset-0 w-full h-full;
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Next.js Image Fill Fix */
+[data-nimg] {
+  object-fit: cover !important;
+}
+
+/* Ensure all images in cards have proper sizing */
+.card img,
+.bg-card img,
+[class*="rounded"] img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Product grid image fix */
+.product-grid .product-card img,
+.product-list img {
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+/* Aspect ratio containers */
+.aspect-product {
+  aspect-ratio: 1 / 1;
+}
+
+.aspect-card {
+  aspect-ratio: 4 / 5;
+}
+
+.aspect-thumbnail {
+  aspect-ratio: 1 / 1;
+}
+
+.aspect-banner {
+  aspect-ratio: 21 / 9;
+}
+
+/* Image hover zoom effect with proper fit */
+.image-zoom {
+  @apply overflow-hidden;
+}
+
+.image-zoom img {
+  @apply transition-transform duration-500 ease-out;
+  object-fit: cover !important;
+}
+
+.image-zoom:hover img {
+  @apply scale-110;
+}
+
+/* Fix for broken/loading images */
+img[src=""],
+img:not([src]) {
+  visibility: hidden;
+}
+
+img {
+  background-color: #f3f4f6;
+}
+
+/* Skeleton loading for images */
+.image-skeleton {
+  @apply bg-gray-100 animate-pulse;
+  aspect-ratio: 1 / 1;
+}
+
+/* Responsive image containers */
+@media (max-width: 640px) {
+  .product-image-container {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .product-image-container {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+@media (min-width: 1025px) {
+  .product-image-container {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* ==================== MOBILE OPTIMIZATIONS ==================== */
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  button, 
+  a, 
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Mobile-friendly cards */
+  .product-card {
+    border-radius: 12px;
+  }
+  
+  /* Disable hover effects on touch devices */
+  .product-card:hover {
+    transform: none;
+  }
+  
+  /* Better mobile navigation */
+  nav a {
+    padding: 12px 16px;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-left {
+    padding-left: max(16px, env(safe-area-inset-left));
+  }
+  
+  .safe-area-right {
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+/* Smooth scrolling with momentum on iOS */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+/* Prevent pull-to-refresh interference */
+.no-pull-refresh {
+  overscroll-behavior-y: none;
+}
+
+/* Mobile-optimized buttons */
+.btn-mobile {
+  @apply px-6 py-3 text-base font-medium rounded-xl;
+  @apply active:scale-95 transition-transform duration-150;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better focus states for accessibility */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Mobile-friendly form inputs */
+@media (max-width: 768px) {
+  input, 
+  select, 
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+}
+
+/* Touch-friendly swipe areas */
+.swipe-area {
+  touch-action: pan-x;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mobile carousel optimization */
+@media (max-width: 640px) {
+  .swiper-slide {
+    padding: 0 4px;
+  }
+  
+  .swiper-pagination {
+    bottom: 8px !important;
+  }
+  
+  .swiper-button-prev,
+  .swiper-button-next {
+    display: none !important;
+  }
+}
+
+/* Better mobile grid layouts */
+@media (max-width: 640px) {
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  .mobile-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+/* Mobile-optimized text */
+.mobile-text-sm {
+  @apply text-sm sm:text-base;
+}
+
+.mobile-text-base {
+  @apply text-base sm:text-lg;
+}
+
+.mobile-text-lg {
+  @apply text-lg sm:text-xl md:text-2xl;
+}
+
+.mobile-text-xl {
+  @apply text-xl sm:text-2xl md:text-3xl;
+}
+
+.mobile-text-2xl {
+  @apply text-2xl sm:text-3xl md:text-4xl;
+}
+
+/* Fixed bottom navigation for mobile */
+.mobile-bottom-nav {
+  @apply fixed bottom-0 left-0 right-0 z-50;
+  @apply bg-white/95 backdrop-blur-md border-t;
+  @apply flex items-center justify-around;
+  @apply py-2 px-4;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+/* Sticky header with proper mobile sizing */
+.mobile-header {
+  @apply sticky top-0 z-50;
+  @apply h-14 sm:h-16 md:h-20;
+  @apply bg-white/95 backdrop-blur-md;
+}
+
+/* Mobile-friendly modal/drawer */
+.mobile-drawer {
+  @apply fixed inset-x-0 bottom-0 z-50;
+  @apply bg-white rounded-t-3xl;
+  @apply max-h-[85vh] overflow-y-auto;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+/* Loading states for better UX */
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Responsive spacing utilities */
+.section-padding {
+  @apply py-8 sm:py-12 md:py-16 lg:py-20;
+}
+
+.section-margin {
+  @apply my-8 sm:my-12 md:my-16 lg:my-20;
+}
+
+/* Better readable line lengths */
+.readable-width {
+  max-width: 65ch;
+}
+
+/* Prevent layout shift from images */
+.image-placeholder {
+  @apply bg-gray-100;
+  aspect-ratio: var(--aspect-ratio, 1);
+}
+
+/* Smooth page transitions */
+.page-transition {
+  @apply transition-opacity duration-300;
+}
+
+/* Hide on mobile / desktop utilities */
+@media (max-width: 639px) {
+  .hide-mobile { display: none !important; }
+}
+
+@media (min-width: 640px) {
+  .hide-desktop { display: none !important; }
+}
+
+/* Hero buttons hidden on mobile */
+@media (max-width: 767px) {
+  .hero-buttons {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+}
