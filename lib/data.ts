@@ -89,6 +89,13 @@ export const products: Product[] = [
     ],
     description: "Stunning cloned Blue Diamond Discus with perfect circular body shape and brilliant cobalt blue coloration. Genetically identical to award-winning specimens.",
     careGuide: "Temperature: 82-86°F, pH: 6.0-7.0, Tank Size: 55+ gallons. Requires pristine water quality and varied diet including beef heart and bloodworms.",
+    specifications: {
+      "Size": "6-8 inches",
+      "Lifespan": "10-15 years",
+      "Diet": "Carnivore",
+      "Temperament": "Peaceful",
+      "Tank Size": "55+ gallons",
+    },
     inStock: true,
     isNew: true,
     isFeatured: true,
@@ -109,6 +116,13 @@ export const products: Product[] = [
     ],
     description: "Premium cloned Flowerhorn with massive kok (head protrusion) and vivid red coloration. Perfect genetics ensure impressive growth and coloration.",
     careGuide: "Temperature: 80-86°F, pH: 7.0-8.0, Tank Size: 75+ gallons. Aggressive fish, keep alone. Feed high-quality pellets and occasional treats.",
+    specifications: {
+      "Size": "10-14 inches",
+      "Lifespan": "10-12 years",
+      "Diet": "Omnivore",
+      "Temperament": "Aggressive",
+      "Tank Size": "75+ gallons",
+    },
     inStock: true,
     isFeatured: true,
     rating: 4.7,
@@ -149,6 +163,13 @@ export const products: Product[] = [
     ],
     description: "A beautiful school of 10 vibrant Neon Tetras. Their iridescent blue and red stripes create a stunning display in any planted aquarium.",
     careGuide: "Temperature: 70-81°F, pH: 6.0-7.0. Peaceful community fish. Keep in groups of 6+.",
+    specifications: {
+      "Size": "1-1.5 inches",
+      "Lifespan": "5-8 years",
+      "Diet": "Omnivore",
+      "Temperament": "Peaceful",
+      "Tank Size": "10+ gallons",
+    },
     inStock: true,
     rating: 4.6,
     reviews: 324,
@@ -166,6 +187,13 @@ export const products: Product[] = [
     ],
     description: "Elegant pair of Marble Angelfish with beautiful black and white marbling patterns. Perfect centerpiece fish for community aquariums.",
     careGuide: "Temperature: 76-84°F, pH: 6.5-7.5, Tank Size: 30+ gallons. Semi-aggressive, may eat small fish.",
+    specifications: {
+      "Size": "6 inches (body), 8+ inches (tall)",
+      "Lifespan": "10-12 years",
+      "Diet": "Omnivore",
+      "Temperament": "Semi-aggressive",
+      "Tank Size": "30+ gallons",
+    },
     inStock: true,
     rating: 4.5,
     reviews: 178,
@@ -183,6 +211,13 @@ export const products: Product[] = [
     ],
     description: "Stunning school of Cardinal Tetras with deeper red coloration than Neons. Perfect for planted Amazon-style aquariums.",
     careGuide: "Temperature: 73-81°F, pH: 5.5-7.0. Peaceful schooling fish.",
+    specifications: {
+      "Size": "1.5-2 inches",
+      "Lifespan": "5-8 years",
+      "Diet": "Omnivore",
+      "Temperament": "Peaceful",
+      "Tank Size": "15+ gallons",
+    },
     inStock: true,
     isNew: true,
     rating: 4.7,
@@ -203,6 +238,13 @@ export const products: Product[] = [
     ],
     description: "Stunning Galaxy Koi pattern Betta with speckled coloration resembling a starry night sky. Premium quality imported from Thailand.",
     careGuide: "Temperature: 76-82°F, pH: 6.5-7.5, Tank Size: 5+ gallons. Keep males separate. Varied diet recommended.",
+    specifications: {
+      "Size": "2.5-3 inches",
+      "Lifespan": "3-5 years",
+      "Diet": "Carnivore",
+      "Temperament": "Aggressive (males)",
+      "Tank Size": "5+ gallons",
+    },
     inStock: true,
     isNew: true,
     rating: 4.9,
@@ -220,6 +262,13 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1520302630591-fd1c66edc19d?w=800",
     ],
     description: "Magnificent Halfmoon Betta with dragon scale pattern. Features a 180-degree tail spread and metallic scaling.",
+    specifications: {
+      "Size": "2.5-3 inches",
+      "Lifespan": "3-5 years",
+      "Diet": "Carnivore",
+      "Temperament": "Aggressive (males)",
+      "Tank Size": "5+ gallons",
+    },
     inStock: true,
     rating: 4.7,
     reviews: 289,
@@ -236,6 +285,13 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1520302630591-fd1c66edc19d?w=800",
     ],
     description: "Beautiful Dumbo Ear Betta with oversized pectoral fins that resemble elephant ears. Multicolor variety.",
+    specifications: {
+      "Size": "2.5-3 inches",
+      "Lifespan": "3-5 years",
+      "Diet": "Carnivore",
+      "Temperament": "Aggressive (males)",
+      "Tank Size": "5+ gallons",
+    },
     inStock: true,
     isFeatured: true,
     rating: 4.8,
@@ -256,6 +312,13 @@ export const products: Product[] = [
     ],
     description: "Premium Japanese Ranchu Goldfish known as the 'King of Goldfish'. Features a distinctive head growth and egg-shaped body.",
     careGuide: "Temperature: 65-75°F, pH: 7.0-8.0, Tank Size: 20+ gallons per fish. Cold water fish, no heater needed.",
+    specifications: {
+      "Size": "6-8 inches",
+      "Lifespan": "10-15 years",
+      "Diet": "Omnivore",
+      "Temperament": "Peaceful",
+      "Tank Size": "20+ gallons per fish",
+    },
     inStock: true,
     isFeatured: true,
     rating: 4.8,
@@ -273,6 +336,13 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1520302630591-fd1c66edc19d?w=800",
     ],
     description: "Beautiful Red Cap Oranda with white body and vibrant red hood growth. A classic and beloved variety.",
+    specifications: {
+      "Size": "6-8 inches",
+      "Lifespan": "10-15 years",
+      "Diet": "Omnivore",
+      "Temperament": "Peaceful",
+      "Tank Size": "20+ gallons per fish",
+    },
     inStock: true,
     rating: 4.6,
     reviews: 234,
@@ -292,6 +362,13 @@ export const products: Product[] = [
     ],
     description: "High-quality Kohaku Koi with crisp white skin and vibrant red (hi) pattern. Japanese bloodline.",
     careGuide: "Temperature: 59-77°F, pH: 7.0-8.5. Requires pond or very large tank (500+ gallons).",
+    specifications: {
+      "Size": "24-36 inches",
+      "Lifespan": "25-35 years",
+      "Diet": "Omnivore",
+      "Temperament": "Peaceful",
+      "Tank Size": "500+ gallons / pond",
+    },
     inStock: true,
     isFeatured: true,
     rating: 4.9,
@@ -334,6 +411,12 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800",
     ],
     description: "Full spectrum RGB LED light with remote control. Simulates sunrise/sunset. Perfect for planted tanks.",
+    specifications: {
+      "LED Type": "Full Spectrum RGB",
+      "Control": "Remote + App",
+      "Features": "Sunrise/Sunset simulation",
+      "Suitable For": "Freshwater planted tanks",
+    },
     inStock: true,
     rating: 4.6,
     reviews: 312,
@@ -350,6 +433,12 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800",
     ],
     description: "Titanium heating element for durability. Digital temperature control with LED display. Suitable for saltwater and freshwater.",
+    specifications: {
+      "Material": "Titanium",
+      "Power": "300W",
+      "Temperature Range": "20-34°C",
+      "Suitable For": "Freshwater & Saltwater",
+    },
     inStock: true,
     rating: 4.8,
     reviews: 278,
@@ -366,6 +455,12 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800",
     ],
     description: "Whisper-quiet air pump with adjustable flow. Perfect for bedrooms and offices. Includes airline tubing.",
+    specifications: {
+      "Noise Level": "< 35 dB",
+      "Flow": "Adjustable",
+      "Includes": "Airline tubing",
+      "Suitable For": "Freshwater & Saltwater",
+    },
     inStock: true,
     isNew: true,
     rating: 4.5,
@@ -384,6 +479,12 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800",
     ],
     description: "Premium natural driftwood and dragon stone set. Pre-cleaned and ready for aquarium use. Creates stunning aquascapes.",
+    specifications: {
+      "Material": "Natural Driftwood & Dragon Stone",
+      "Treatment": "Pre-cleaned, aquarium-safe",
+      "Suitable For": "Freshwater & Saltwater",
+      "Use": "Aquascaping & decoration",
+    },
     inStock: true,
     isFeatured: true,
     rating: 4.7,
@@ -401,6 +502,12 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800",
     ],
     description: "High-quality floating pellets with color-enhancing ingredients. Suitable for all tropical fish. No cloudiness guaranteed.",
+    specifications: {
+      "Form": "Floating pellets",
+      "Suitable For": "All tropical fish",
+      "Key Ingredient": "Astaxanthin (color enhancer)",
+      "Cloudiness": "None guaranteed",
+    },
     inStock: true,
     rating: 4.6,
     reviews: 567,
@@ -418,6 +525,12 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=800",
     ],
     description: "Professional CO2 injection system for planted tanks. Includes regulator, solenoid, diffuser, and bubble counter.",
+    specifications: {
+      "Includes": "Regulator, solenoid, diffuser, bubble counter",
+      "Suitable For": "Planted freshwater tanks",
+      "Cylinder": "Not included",
+      "Connection": "Standard CGA320 / W21.8",
+    },
     inStock: true,
     isNew: true,
     isFeatured: true,
@@ -426,6 +539,54 @@ export const products: Product[] = [
     tags: ["co2", "planted tank", "aquascape"],
   },
 ];
+
+const searchableCategoryLabels = categories.reduce<Record<string, string>>((labels, category) => {
+  labels[category.id] = `${category.name} ${category.slug}`;
+
+  category.subcategories.forEach((subcategory) => {
+    labels[subcategory.slug] = `${subcategory.name} ${subcategory.slug}`;
+  });
+
+  return labels;
+}, {});
+
+const normalizeSearchText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+export const getProductSearchText = (product: Product) =>
+  normalizeSearchText(
+    [
+      product.name,
+      product.description,
+      product.category,
+      product.subcategory,
+      searchableCategoryLabels[product.category],
+      product.subcategory ? searchableCategoryLabels[product.subcategory] : undefined,
+      product.careGuide,
+      ...(product.tags ?? []),
+      ...Object.values(product.specifications ?? {}),
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
+export const searchProducts = (query: string, productList: Product[] = products): Product[] => {
+  const searchTerms = normalizeSearchText(query).split(" ").filter(Boolean);
+
+  if (searchTerms.length === 0) {
+    return productList;
+  }
+
+  return productList.filter((product) => {
+    const productSearchText = getProductSearchText(product);
+    return searchTerms.every((term) => productSearchText.includes(term));
+  });
+};
 
 export const testimonials = [
   {

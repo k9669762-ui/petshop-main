@@ -193,7 +193,7 @@ export function Footer() {
         </div>
       </div>
 
-      {/* Bottom Bar */}
+      {/* Bottom Bar */}  
       <div className="border-t border-white/10">
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex flex-col items-center gap-3 sm:gap-4">

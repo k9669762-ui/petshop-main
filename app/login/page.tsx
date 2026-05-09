@@ -143,7 +143,7 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
 
-    const result = loginWithPassword(email || mobile, password)
+    const result = await loginWithPassword(email || mobile, password)
     
     if (result.success) {
       setSuccess('Login successful! Redirecting...')

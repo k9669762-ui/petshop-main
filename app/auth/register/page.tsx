@@ -67,7 +67,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const result = registerWithPassword({
+      const result = await registerWithPassword({
         name: formData.name,
         email: formData.email,
         mobile: formData.phone,

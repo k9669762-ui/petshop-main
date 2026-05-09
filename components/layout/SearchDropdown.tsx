@@ -6,11 +6,11 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Search, X, TrendingUp } from 'lucide-react'
 import { useUIStore } from '@/store/useUIStore'
-import { searchProducts, products } from '@/lib/mockData'
+import { searchProducts, products } from '@/lib/data'
 import { formatPrice } from '@/lib/utils'
-import { Product } from '@/types'
+import { Product } from '@/lib/store'
 
-const trendingSearches = ['Dog Food', 'Cat Toys', 'Pet Beds', 'Treats', 'Grooming']
+const trendingSearches = ['Arowana', 'Betta Fish', 'Aquarium Tank', 'Fish Food', 'Filters']
 
 export default function SearchDropdown() {
   const [query, setQuery] = useState('')
@@ -144,7 +144,7 @@ export default function SearchDropdown() {
           <div className="mt-8">
             <h3 className="font-heading font-semibold text-gray-500 mb-4">Popular Products</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {products.filter(p => p.isBestSeller).slice(0, 6).map((product, index) => (
+              {products.filter(p => p.isFeatured).slice(0, 6).map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -180,4 +180,3 @@ export default function SearchDropdown() {
     </motion.div>
   )
 }
-

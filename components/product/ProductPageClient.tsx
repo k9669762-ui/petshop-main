@@ -33,6 +33,52 @@ import { toast } from "@/components/ui/use-toast";
 // Combine all products
 const allProducts = [...products, ...birdsAndFishProducts];
 
+const titleCase = (value: string) =>
+  value
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+const getFallbackSpecifications = (product: (typeof allProducts)[number]) => {
+  const baseSpecs: Record<string, string> = {
+    "Product Type": titleCase(product.category),
+    "Subcategory": product.subcategory ? titleCase(product.subcategory) : "General",
+    "Availability": product.inStock ? "In stock" : "Currently unavailable",
+    "Store": "Rainbow Aqua",
+    "Delivery Coverage": "Tamil Nadu and serviceable Indian locations",
+  };
+
+  if (product.category === "aquarium-fish" || product.subcategory?.includes("fish")) {
+    return {
+      ...baseSpecs,
+      "Recommended For": "Freshwater aquarium hobbyists",
+      "Water Condition": "Use dechlorinated, cycled aquarium water",
+      "Acclimation": "Float bag 15-20 minutes, then slow drip acclimate",
+      "Feeding": "Quality fish pellets with frozen or live treats as suitable",
+      "Live Arrival": "Eligible for live arrival support when delivery guidelines are followed",
+    };
+  }
+
+  if (product.category === "accessories") {
+    return {
+      ...baseSpecs,
+      "Recommended For": "Aquarium setup, maintenance, and daily care",
+      "Compatibility": "Check tank size and product variant before purchase",
+      "Installation": "Follow included setup instructions before first use",
+      "Maintenance": "Clean regularly with aquarium-safe methods",
+      "Warranty Support": "Contact Rainbow Aqua support for product assistance",
+    };
+  }
+
+  return {
+    ...baseSpecs,
+    "Recommended For": "Pet parents and aquarium keepers",
+    "Quality Check": "Inspected by Rainbow Aqua before dispatch",
+    "Care Support": "Care guidance available from our support team",
+  };
+};
+
 interface ProductPageClientProps {
   slug: string;
 }
@@ -69,6 +115,10 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
   const relatedProducts = allProducts
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
+  const displaySpecifications =
+    product.specifications && Object.keys(product.specifications).length > 0
+      ? product.specifications
+      : getFallbackSpecifications(product);
 
   const handleAddToCart = () => {
     addItem(product, quantity, selectedVariants);
@@ -367,18 +417,14 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
             <TabsContent value="specs" className="mt-6">
               <div className="bg-card rounded-xl p-6 border">
                 <h3 className="text-xl font-semibold mb-4">Specifications</h3>
-                {product.specifications ? (
-                  <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between p-3 bg-muted/50 rounded-lg">
-                        <dt className="font-medium">{key}</dt>
-                        <dd className="text-muted-foreground">{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className="text-muted-foreground">No specifications available.</p>
-                )}
+                <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(displaySpecifications).map(([key, value]) => (
+                    <div key={key} className="flex justify-between gap-4 p-3 bg-muted/50 rounded-lg">
+                      <dt className="font-medium">{key}</dt>
+                      <dd className="text-right text-muted-foreground">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             </TabsContent>
 
@@ -440,4 +486,3 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
     </main>
   );
 }
-

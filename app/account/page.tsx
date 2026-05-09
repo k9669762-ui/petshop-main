@@ -68,6 +68,9 @@ export default function AccountPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const allOrders = useAuthStore((state) => state.orders);
   const logout = useAuthStore((state) => state.logout);
+  const updateProfile = useAuthStore((state) => state.updateProfile);
+  const fetchMyOrders = useAuthStore((state) => state.fetchMyOrders);
+  const [profileMessage, setProfileMessage] = useState("");
 
   const userOrders = useMemo(
     () => (currentUser ? allOrders.filter((order) => order.userId === currentUser.id) : []),
@@ -82,6 +85,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
+      fetchMyOrders();
       setIsLoggedIn(true);
       setUser({
         name: currentUser.name,
@@ -98,7 +102,7 @@ export default function AccountPage() {
 
     setIsLoggedIn(false);
     setUser(emptyUser);
-  }, [currentUser, isAuthenticated]);
+  }, [currentUser, fetchMyOrders, isAuthenticated]);
 
   if (!isLoggedIn) {
     return (
@@ -191,9 +195,8 @@ export default function AccountPage() {
                 </nav>
 
                 <button
-                  onClick={() => {
-                    logout();
-                    localStorage.removeItem("userAuth");
+                  onClick={async () => {
+                    await logout();
                     setIsLoggedIn(false);
                   }}
                   className="mt-4 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50"
@@ -291,22 +294,45 @@ export default function AccountPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="name" className="text-sm">Full Name</Label>
-                    <Input id="name" defaultValue={user.name} className="mt-1" />
+                    <Input id="name" value={user.name} onChange={(event) => setUser((current) => ({ ...current, name: event.target.value }))} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="email" className="text-sm">Email</Label>
-                    <Input id="email" type="email" defaultValue={user.email} className="mt-1" />
+                    <Input id="email" type="email" value={user.email} onChange={(event) => setUser((current) => ({ ...current, email: event.target.value }))} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="phone" className="text-sm">Phone</Label>
-                    <Input id="phone" defaultValue={user.phone} className="mt-1" />
+                    <Input id="phone" value={user.phone} onChange={(event) => setUser((current) => ({ ...current, phone: event.target.value }))} className="mt-1" />
                   </div>
                   <div>
                     <Label htmlFor="district" className="text-sm">District</Label>
-                    <Input id="district" defaultValue={user.district} className="mt-1" />
+                    <Input id="district" value={user.district} onChange={(event) => setUser((current) => ({ ...current, district: event.target.value }))} className="mt-1" />
                   </div>
                 </div>
-                <Button className="mt-4 bg-primary">Save Changes</Button>
+                <Button
+                  className="mt-4 bg-primary"
+                  onClick={async () => {
+                    await updateProfile({
+                      name: user.name.trim(),
+                      email: user.email.trim() || undefined,
+                      mobile: user.phone.trim(),
+                      address: {
+                        addressLine1: currentUser?.address?.addressLine1 ?? "",
+                        addressLine2: currentUser?.address?.addressLine2,
+                        area: currentUser?.address?.area ?? "",
+                        city: currentUser?.address?.city ?? "",
+                        district: user.district.trim(),
+                        pincode: currentUser?.address?.pincode ?? "",
+                        state: "Tamil Nadu",
+                        country: "India",
+                      },
+                    });
+                    setProfileMessage("Profile updated successfully.");
+                  }}
+                >
+                  Save Changes
+                </Button>
+                {profileMessage && <p className="mt-2 text-sm text-green-600">{profileMessage}</p>}
               </motion.div>
             </div>
           </div>

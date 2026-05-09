@@ -1,33 +1,59 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { BarChart3, Home, Package, Settings, ShoppingCart, Users } from "lucide-react";
+import { BarChart3, Home, Mail, MapPin, Package, Phone, Settings, ShoppingCart, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const customers = [
-  { name: "Rajesh Kumar", email: "rajesh@example.com", city: "Chennai", orders: 8 },
-  { name: "Priya Sharma", email: "priya@example.com", city: "Coimbatore", orders: 5 },
-  { name: "Mohammed Ali", email: "mohammed@example.com", city: "Madurai", orders: 3 },
-];
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function OwnerCustomersPage() {
+  const { currentUser, users, getAllOrders, fetchAdminData } = useAuthStore();
+
+  useEffect(() => {
+    fetchAdminData();
+  }, [fetchAdminData]);
+
+  if (!currentUser || currentUser.role !== "owner") return null;
+
+  const orders = getAllOrders();
+  const customers = users
+    .filter((user) => user.role === "user")
+    .map((user) => ({
+      ...user,
+      orderCount: orders.filter((order) => order.userId === user.id).length,
+      totalSpend: orders
+        .filter((order) => order.userId === user.id)
+        .reduce((sum, order) => sum + order.total, 0),
+    }));
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 py-8">
         <OwnerNav active="customers" />
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
-          <p className="mt-1 text-sm text-gray-500">View customer activity and order counts.</p>
+          <p className="mt-1 text-sm text-gray-500">Real customer profiles and order counts from Firestore.</p>
+
           <div className="mt-6 overflow-hidden rounded-xl border">
             {customers.map((customer) => (
-              <div key={customer.email} className="flex flex-col gap-2 border-b p-4 last:border-b-0 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div key={customer.id} className="flex flex-col gap-4 border-b p-4 last:border-b-0 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
                   <p className="font-semibold text-gray-800">{customer.name}</p>
-                  <p className="text-sm text-gray-500">{customer.email} - {customer.city}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+                    {customer.email && <span className="inline-flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{customer.email}</span>}
+                    <span className="inline-flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{customer.mobile}</span>
+                    <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{customer.address?.district || "No district"}</span>
+                  </div>
                 </div>
-                <Badge>{customer.orders} orders</Badge>
+                <div className="flex flex-wrap gap-2">
+                  <Badge>{customer.orderCount} orders</Badge>
+                  <Badge variant="outline">Rs. {customer.totalSpend.toLocaleString("en-IN")} spent</Badge>
+                </div>
               </div>
             ))}
+            {customers.length === 0 && (
+              <div className="p-8 text-center text-sm text-gray-400">No customers found in Firestore.</div>
+            )}
           </div>
         </section>
       </div>

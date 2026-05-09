@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { 
@@ -33,14 +33,8 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false)
 
-  // Protect route
-  useEffect(() => {
-    if (!isAuthenticated || (currentUser?.role !== 'admin' && currentUser?.role !== 'owner')) {
-      router.push('/admin/login')
-    }
-  }, [isAuthenticated, currentUser, router])
-
-  if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'owner')) {
+  // Protect route — middleware handles redirect, this is a safety net
+  if (!currentUser || currentUser.role !== 'owner') {
     return null
   }
 
@@ -87,7 +81,7 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     logout()
-    router.push('/admin/login')
+    router.push('/')
   }
 
   return (
@@ -104,7 +98,7 @@ export default function AdminDashboard() {
                 <span className="text-primary-500">paw</span>
               </span>
               <span className="ml-2 px-2 py-0.5 bg-primary-100 text-primary-600 text-xs font-medium rounded-full">
-                {currentUser.role === 'admin' ? 'Admin' : 'Owner'}
+                {currentUser.role === 'owner' ? 'Owner' : 'Admin'}
               </span>
             </Link>
 
@@ -606,4 +600,3 @@ export default function AdminDashboard() {
     </div>
   )
 }
-

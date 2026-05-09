@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -64,34 +65,37 @@ const statusColors: Record<string, string> = {
 export default function OwnerDashboard() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { currentUser, logout, getAllOrders, getAllUserCarts, users, fetchAdminData } = useAuthStore();
 
   useEffect(() => {
-    // Check authentication
-    const auth = localStorage.getItem("ownerAuth");
-    if (!auth) {
-      router.push("/owner/login");
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [router]);
+    fetchAdminData();
+  }, [fetchAdminData]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("ownerAuth");
-    router.push("/owner/login");
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full"
-        />
-      </div>
-    );
+  // Middleware handles redirect — safety net only
+  if (!currentUser || currentUser.role !== 'owner') {
+    return null;
   }
+
+  const orders = getAllOrders();
+  const userCarts = getAllUserCarts();
+
+  // Real stats from Firestore
+  const totalRevenue = orders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + o.total, 0);
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(o => o.status === 'pending').length;
+  const totalCustomers = users.filter(u => u.role === 'user').length;
+
+  const liveStats = [
+    { label: "Total Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, change: "", icon: DollarSign, color: "bg-green-500" },
+    { label: "Total Orders", value: totalOrders.toString(), change: "", icon: ShoppingCart, color: "bg-blue-500" },
+    { label: "Pending Orders", value: pendingOrders.toString(), change: "", icon: Package, color: "bg-purple-500" },
+    { label: "Customers", value: totalCustomers.toString(), change: "", icon: Users, color: "bg-orange-500" },
+  ];
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -189,7 +193,7 @@ export default function OwnerDashboard() {
         <main className="p-4 sm:p-6">
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {stats.map((stat, index) => (
+            {liveStats.map((stat, index) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
@@ -215,7 +219,7 @@ export default function OwnerDashboard() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Recent Orders */}
+            {/* Recent Orders from Firestore */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border">
               <div className="p-4 sm:p-5 border-b flex items-center justify-between">
                 <h2 className="font-semibold text-gray-800">Recent Orders</h2>
@@ -227,46 +231,57 @@ export default function OwnerDashboard() {
                     <tr>
                       <th className="px-4 py-3 text-left">Order ID</th>
                       <th className="px-4 py-3 text-left">Customer</th>
-                      <th className="px-4 py-3 text-left hidden sm:table-cell">Product</th>
                       <th className="px-4 py-3 text-left">Amount</th>
                       <th className="px-4 py-3 text-left">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {recentOrders.map((order) => (
+                    {orders.slice(0, 5).map((order) => (
                       <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm font-medium text-gray-800">{order.id}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{order.customer}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600 hidden sm:table-cell truncate max-w-[150px]">{order.product}</td>
-                        <td className="px-4 py-3 text-sm font-medium text-gray-800">{order.amount}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800">{order.id.slice(0, 10)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{order.userName}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-gray-800">₹{order.total.toLocaleString('en-IN')}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                            order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
+                            order.status === 'processing' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
                             {order.status}
                           </span>
                         </td>
                       </tr>
                     ))}
+                    {orders.length === 0 && (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-400">No orders yet</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Top Products */}
+            {/* Top Customers from Firestore */}
             <div className="bg-white rounded-xl shadow-sm border">
               <div className="p-4 sm:p-5 border-b flex items-center justify-between">
-                <h2 className="font-semibold text-gray-800">Top Products</h2>
-                <Link href="/owner/products" className="text-sm text-cyan-600 hover:underline">View All</Link>
+                <h2 className="font-semibold text-gray-800">Customers</h2>
+                <Link href="/owner/customers" className="text-sm text-cyan-600 hover:underline">View All</Link>
               </div>
               <div className="p-4 space-y-4">
-                {topProducts.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{product.name}</p>
-                      <p className="text-xs text-gray-500">{product.sales} sales • Stock: {product.stock}</p>
+                {users.filter(u => u.role === 'user').slice(0, 5).map((u) => (
+                  <div key={u.id} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center text-cyan-700 font-bold text-sm">
+                      {u.name.charAt(0)}
                     </div>
-                    <p className="text-sm font-semibold text-gray-800 ml-4">{product.revenue}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{u.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{u.email || u.mobile}</p>
+                    </div>
                   </div>
                 ))}
+                {users.filter(u => u.role === 'user').length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-4">No customers yet</p>
+                )}
               </div>
             </div>
           </div>
@@ -305,4 +320,3 @@ export default function OwnerDashboard() {
     </div>
   );
 }
-

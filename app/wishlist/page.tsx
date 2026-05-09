@@ -118,7 +118,7 @@ export default function WishlistPage() {
     const tax = Math.round(subtotal * 0.09)
     const total = subtotal + shipping + tax
 
-    const order = createOrder({
+    const order = await createOrder({
       userId: currentUser.id,
       userName: currentUser.name,
       userEmail: currentUser.email || '',

@@ -1,5 +1,3 @@
-"use client";
-
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
@@ -12,7 +10,6 @@ import { TamilNaduDeliveryCarousel } from "@/components/tamil-nadu-delivery";
 import { products } from "@/lib/data";
 
 export default function HomePage() {
-  // Get filtered products for carousels
   const newArrivals = products.filter(p => p.isNew === true);
   const featuredProducts = products.filter(p => p.isFeatured === true);
   const accessories = products.filter(p => p.category === "accessories");

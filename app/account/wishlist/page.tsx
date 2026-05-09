@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Heart, ArrowLeft } from "lucide-react";
 import { Navigation } from "@/components/navigation";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useWishlistStore } from "@/lib/store";
 
 export default function WishlistPage() {
+  const router = useRouter();
   const { items } = useWishlistStore();
 
   return (
@@ -19,10 +21,20 @@ export default function WishlistPage() {
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-4 mb-8">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/account">
+            <Button
+              variant="ghost"
+              size="icon"
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  router.back();
+                  return;
+                }
+
+                router.push("/account");
+              }}
+            >
                 <ArrowLeft className="w-5 h-5" />
-              </Link>
             </Button>
             <div>
               <h1 className="text-3xl font-display font-bold">My Wishlist</h1>
@@ -61,5 +73,4 @@ export default function WishlistPage() {
     </main>
   );
 }
-
 

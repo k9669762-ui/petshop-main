@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Filter, Grid, Grid3X3, SlidersHorizontal, X } from "lucide-react";
 import { Navigation } from "@/components/navigation";
@@ -16,10 +17,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ProductCarousel from "@/components/ui/ProductCarousel";
-import { products, categories } from "@/lib/data";
+import { products, categories, searchProducts } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
 
-export default function ShopPage() {
+function ShopPageContent() {
+  const searchParams = useSearchParams();
   const [gridCols, setGridCols] = useState<2 | 3 | 4 | 5>(4);
   const [sortBy, setSortBy] = useState("featured");
   const [priceRange, setPriceRange] = useState([0, 150000]);
@@ -30,15 +32,14 @@ export default function ShopPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const category = params.get("category");
-    const search = params.get("search");
-    const filter = params.get("filter");
+    const category = searchParams.get("category");
+    const search = searchParams.get("search");
+    const filter = searchParams.get("filter");
 
-    if (category) setSelectedCategories([category]);
-    if (search) setSearchQuery(search);
-    if (filter) setUrlFilter(filter);
-  }, []);
+    setSelectedCategories(category ? [category] : []);
+    setSearchQuery(search ?? "");
+    setUrlFilter(filter ?? "");
+  }, [searchParams]);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -50,17 +51,7 @@ export default function ShopPage() {
 
     const normalizedSearch = searchQuery.trim().toLowerCase();
     if (normalizedSearch) {
-      result = result.filter((p) =>
-        [
-          p.name,
-          p.description,
-          p.category,
-          p.subcategory,
-          ...(p.tags ?? []),
-        ]
-          .filter(Boolean)
-          .some((value) => value!.toLowerCase().includes(normalizedSearch))
-      );
+      result = searchProducts(normalizedSearch, result);
     }
 
     // Filter by price
@@ -396,5 +387,13 @@ export default function ShopPage() {
 
       <Footer />
     </main>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={null}>
+      <ShopPageContent />
+    </Suspense>
   );
 }

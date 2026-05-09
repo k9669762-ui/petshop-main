@@ -28,10 +28,7 @@ export default function AdminLoginPage() {
     setError('')
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    const result = loginWithPassword(email, password)
+    const result = await loginWithPassword(email, password)
     
     if (result.success) {
       const user = useAuthStore.getState().currentUser
@@ -39,7 +36,7 @@ export default function AdminLoginPage() {
         router.push('/admin/dashboard')
       } else {
         setError('Access denied. Admin or Owner account required.')
-        useAuthStore.getState().logout()
+        await useAuthStore.getState().logout()
       }
     } else {
       setError(result.message)
@@ -99,15 +96,6 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-          {/* Demo Credentials */}
-          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-sm">
-            <p className="font-medium text-gray-700 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-gray-600">
-              <p><span className="font-medium">Admin:</span> admin@bowpaw.com / admin123</p>
-              <p><span className="font-medium">Owner:</span> owner@bowpaw.com / owner123</p>
-            </div>
-          </div>
-
           {/* Error Message */}
           {error && (
             <motion.div
@@ -132,7 +120,7 @@ export default function AdminLoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@bowpaw.com"
+                  placeholder="rainbowaquariumndbi@gmail.com"
                   required
                   className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                 />
@@ -201,4 +189,3 @@ export default function AdminLoginPage() {
     </div>
   )
 }
-

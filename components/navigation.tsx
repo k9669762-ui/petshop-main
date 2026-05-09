@@ -451,14 +451,23 @@ export function Navigation() {
                     {isAuthenticated && (
                       <>
                         <div className="border-t my-1"></div>
-                        <Link href="/account" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
-                          <Heart className="w-4 h-4" />
-                          My Account
-                        </Link>
-                        <Link href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
-                          <ShoppingCart className="w-4 h-4" />
-                          My Orders
-                        </Link>
+                        {currentUser?.role === 'owner' ? (
+                          <Link href="/owner/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
+                            <User className="w-4 h-4" />
+                            Owner Dashboard
+                          </Link>
+                        ) : (
+                          <>
+                            <Link href="/account" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
+                              <User className="w-4 h-4" />
+                              My Account
+                            </Link>
+                            <Link href="/account/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
+                              <ShoppingCart className="w-4 h-4" />
+                              My Orders
+                            </Link>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -606,7 +615,10 @@ export function Navigation() {
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Account</p>
                   {isAuthenticated && currentUser ? (
                     <Link
-                      href="/account"
+                      href={
+                        currentUser.role === 'owner' ? '/owner/dashboard'
+                        : '/account'
+                      }
                       onClick={toggleMobileMenu}
                       className="flex items-center gap-3 rounded-lg bg-primary px-3 py-3 text-sm font-medium text-white"
                     >

@@ -29,18 +29,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
-// Sample products data
-const sampleProducts = [
-  { id: 1, name: "Betta Fish - Halfmoon", category: "Fish", price: 1499, stock: 23, status: "Active", image: "https://images.unsplash.com/photo-1520302630591-fd1c66edc19d?w=100" },
-  { id: 2, name: "Goldfish - Oranda", category: "Fish", price: 899, stock: 45, status: "Active", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=100" },
-  { id: 3, name: "Budgerigar - Blue", category: "Birds", price: 2499, stock: 12, status: "Active", image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=100" },
-  { id: 4, name: "Guppy Fish Set", category: "Fish", price: 599, stock: 89, status: "Active", image: "https://images.unsplash.com/photo-1571752726703-5e7d1f6a986d?w=100" },
-  { id: 5, name: "Aquarium Tank 50L", category: "Accessories", price: 4999, stock: 8, status: "Low Stock", image: "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=100" },
-  { id: 6, name: "Discus Fish - Blue Diamond", category: "Fish", price: 3999, stock: 5, status: "Low Stock", image: "https://images.unsplash.com/photo-1571752726703-5e7d1f6a986d?w=100" },
-  { id: 7, name: "Cockatiel - Lutino", category: "Birds", price: 4999, stock: 0, status: "Out of Stock", image: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=100" },
-  { id: 8, name: "LED Aquarium Light", category: "Accessories", price: 1299, stock: 34, status: "Active", image: "https://images.unsplash.com/photo-1596526131083-e8c633c948d2?w=100" },
-];
+import { useAuthStore } from "@/store/useAuthStore";
+import { getAllProductsFromDB, deleteProductFromDB, type DBProduct } from "@/lib/firebaseService";
 
 const statusColors: Record<string, string> = {
   "Active": "bg-green-100 text-green-700",
@@ -51,45 +41,52 @@ const statusColors: Record<string, string> = {
 export default function ProductsPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { currentUser, logout } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [products, setProducts] = useState(sampleProducts);
+  const [products, setProducts] = useState<DBProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const auth = localStorage.getItem("ownerAuth");
-    if (!auth) {
-      router.push("/owner/login");
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [router]);
+    getAllProductsFromDB()
+      .then(setProducts)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("ownerAuth");
-    router.push("/owner/login");
-  };
+  if (!currentUser || currentUser.role !== 'owner') return null;
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter(p => p.id !== id));
-    }
+  const handleLogout = async () => { await logout(); router.push('/'); };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this product?")) return;
+    await deleteProductFromDB(id);
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !normalizedSearch ||
+      p.name.toLowerCase().includes(normalizedSearch) ||
+      p.category.toLowerCase().includes(normalizedSearch) ||
+      p.subcategory.toLowerCase().includes(normalizedSearch) ||
+      (p.sku ?? "").toLowerCase().includes(normalizedSearch);
     const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
-  if (!isAuthenticated) {
+  const getStatus = (p: DBProduct) => {
+    if (!p.inStock || p.stock === 0) return "Out of Stock";
+    if (p.stock <= 5) return "Low Stock";
+    return "Active";
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full"
-        />
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full" />
       </div>
     );
   }
@@ -199,9 +196,9 @@ export default function ProductsPage() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
                   <option value="All">All Categories</option>
-                  <option value="Fish">Fish</option>
-                  <option value="Birds">Birds</option>
-                  <option value="Accessories">Accessories</option>
+                  <option value="fish">Fish</option>
+                  <option value="birds">Birds</option>
+                  <option value="accessories">Accessories</option>
                 </select>
                 <Button variant="outline">
                   <Filter className="w-4 h-4 mr-2" />
@@ -234,28 +231,29 @@ export default function ProductsPage() {
                     <tr key={product.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden relative">
-                            <Image 
-                              src={product.image} 
-                              alt={product.name}
-                              fill
-                              className="object-cover"
-                            />
+                          <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden relative flex-shrink-0">
+                            {product.images?.[0] ? (
+                              <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <Package className="w-5 h-5" />
+                              </div>
+                            )}
                           </div>
                           <span className="font-medium text-gray-800 text-sm">{product.name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{product.category}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600 capitalize">{product.category}</td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-800">₹{product.price.toLocaleString()}</td>
                       <td className="px-4 py-3 text-sm text-gray-600">{product.stock}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[product.status]}`}>
-                          {product.status}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[getStatus(product)]}`}>
+                          {getStatus(product)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <Link href={`/owner/products/edit/${product.id}`}>
+                          <Link href={`/owner/products/edit?id=${product.id}`}>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <Edit className="w-4 h-4 text-gray-500" />
                             </Button>
@@ -267,6 +265,9 @@ export default function ProductsPage() {
                       </td>
                     </tr>
                   ))}
+                  {filteredProducts.length === 0 && (
+                    <tr><td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-400">No products found. Add your first product.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -289,4 +290,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-

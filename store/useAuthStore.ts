@@ -1,5 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import {
+  firebaseSignIn,
+  firebaseRegister,
+  firebaseSignOut,
+  getUserProfile,
+  updateUserProfile,
+  createOrderInDB,
+  getUserOrders,
+  getAllOrdersFromDB,
+  getAllUsersFromDB,
+  updateOrderStatusInDB,
+  saveCartToDB,
+  getAllCartsFromDB,
+  updateCurrentUserPassword,
+} from '@/lib/firebaseService'
 
 export type UserRole = 'guest' | 'user' | 'owner' | 'admin'
 export type AccountStatus = 'active' | 'inactive' | 'suspended'
@@ -80,315 +95,55 @@ interface AuthState {
   currentUser: User | null
   isAuthenticated: boolean
   users: User[]
-  passwords: Record<string, string>
   userCarts: UserCart[]
   orders: Order[]
   otpSession: OTPSession | null
-  
+
   // Auth actions
   sendOTP: (mobile: string) => { success: boolean; message: string; otp?: string }
   verifyOTP: (mobile: string, otp: string) => { success: boolean; message: string }
   loginWithMobileOTP: (mobile: string) => { success: boolean; message: string }
-  loginWithPassword: (emailOrMobile: string, password: string) => { success: boolean; message: string }
+  loginWithPassword: (emailOrMobile: string, password: string) => Promise<{ success: boolean; message: string }>
   register: (userData: {
-    name: string
-    mobile: string
-    email?: string
-    password?: string
-    address: UserAddress
+    name: string; mobile: string; email?: string; password?: string; address: UserAddress
   }) => { success: boolean; message: string }
   registerWithPassword: (userData: {
-    name: string
-    mobile: string
-    email: string
-    password: string
-    district: string
-  }) => { success: boolean; message: string }
-  logout: () => void
+    name: string; mobile: string; email: string; password: string; district: string
+  }) => Promise<{ success: boolean; message: string }>
+  logout: () => Promise<void>
   switchAccount: (userId: string) => void
-  
+
   // Admin actions
   getAllUserCarts: () => UserCart[]
   getAllOrders: () => Order[]
   getUserOrders: (userId: string) => Order[]
-  updateOrderStatus: (orderId: string, status: Order['status']) => void
-  
+  updateOrderStatus: (orderId: string, status: Order['status']) => Promise<void>
+  fetchAdminData: () => Promise<void>
+
   // User actions
   updateUserCart: (cart: UserCart) => void
-  createOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => Order
+  createOrder: (order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Order>
   getMyOrders: () => Order[]
-  updateProfile: (updates: Partial<User>) => void
+  fetchMyOrders: () => Promise<void>
+  updateProfile: (updates: Partial<User>) => Promise<void>
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message: string }>
 }
 
-// Demo users with passwords (in real app, use proper auth)
-const demoUsers: (User & { password?: string })[] = [
-  {
-    id: 'admin-001',
-    name: 'Admin BowPaw',
-    email: 'admin@bowpaw.com',
-    mobile: '9876543210',
-    role: 'admin',
-    status: 'active',
-    password: 'admin123',
-    createdAt: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 'owner-001',
-    name: 'Rajesh Kumar',
-    email: 'owner@bowpaw.com',
-    mobile: '9876543211',
-    role: 'owner',
-    status: 'active',
-    password: 'owner123',
-    address: {
-      addressLine1: '45, Anna Salai',
-      area: 'T. Nagar',
-      city: 'Chennai',
-      district: 'Chennai',
-      pincode: '600017',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    createdAt: '2024-01-01T00:00:00Z',
-  },
-  {
-    id: 'user-001',
-    name: 'Priya Sharma',
-    email: 'priya@example.com',
-    mobile: '9876543212',
-    role: 'user',
-    status: 'active',
-    password: 'user123',
-    address: {
-      addressLine1: '123, South Street',
-      area: 'Palayamkottai',
-      city: 'Tirunelveli',
-      district: 'Tirunelveli',
-      pincode: '627002',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    createdAt: '2024-06-15T00:00:00Z',
-  },
-  {
-    id: 'user-002',
-    name: 'Amit Patel',
-    email: 'amit@example.com',
-    mobile: '9876543213',
-    role: 'user',
-    status: 'active',
-    password: 'user123',
-    address: {
-      addressLine1: '456, Gandhi Road',
-      area: 'RS Puram',
-      city: 'Coimbatore',
-      district: 'Coimbatore',
-      pincode: '641002',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    createdAt: '2024-07-20T00:00:00Z',
-  },
-  {
-    id: 'user-003',
-    name: 'Sneha Reddy',
-    email: 'sneha@example.com',
-    mobile: '9876543214',
-    role: 'user',
-    status: 'active',
-    password: 'user123',
-    address: {
-      addressLine1: '789, Main Road',
-      area: 'Srirangam',
-      city: 'Tiruchirappalli',
-      district: 'Tiruchirappalli',
-      pincode: '620006',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    createdAt: '2024-08-10T00:00:00Z',
-  },
-  {
-    id: 'user-004',
-    name: 'Karthik Murugan',
-    mobile: '9988776655',
-    role: 'user',
-    status: 'active',
-    password: 'user123',
-    address: {
-      addressLine1: '12, Temple Street',
-      area: 'Town Area',
-      city: 'Madurai',
-      district: 'Madurai',
-      pincode: '625001',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    createdAt: '2024-09-01T00:00:00Z',
-  },
-]
+// ── Owner hardcoded credentials (Firebase Auth handles password) ──────
+const OWNER_EMAIL = 'rainbowaquariumndbi@gmail.com'
 
-// Demo orders
-const demoOrders: Order[] = [
-  {
-    id: 'ORD-001',
-    userId: 'user-001',
-    userName: 'Priya Sharma',
-    userEmail: 'priya@example.com',
-    userPhone: '+91 9876543212',
-    items: [
-      { productId: '1', productName: 'Premium Dog Food', productImage: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=100', price: 2499, quantity: 2 },
-      { productId: '5', productName: 'Dog Chew Toy', productImage: 'https://images.unsplash.com/photo-1535294435445-d7249524ef2e?w=100', price: 399, quantity: 1 },
-    ],
-    subtotal: 5397,
-    shipping: 99,
-    tax: 486,
-    total: 5982,
-    status: 'delivered',
-    shippingAddress: {
-      addressLine1: '123, South Street',
-      area: 'Palayamkottai',
-      city: 'Tirunelveli',
-      district: 'Tirunelveli',
-      pincode: '627002',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    paymentMethod: 'UPI',
-    paymentStatus: 'paid',
-    createdAt: '2024-11-15T10:30:00Z',
-    updatedAt: '2024-11-18T14:00:00Z',
-  },
-  {
-    id: 'ORD-002',
-    userId: 'user-002',
-    userName: 'Amit Patel',
-    userEmail: 'amit@example.com',
-    userPhone: '+91 9876543213',
-    items: [
-      { productId: '3', productName: 'Cat Scratching Post', productImage: 'https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=100', price: 1899, quantity: 1 },
-    ],
-    subtotal: 1899,
-    shipping: 149,
-    tax: 171,
-    total: 2219,
-    status: 'shipped',
-    shippingAddress: {
-      addressLine1: '456, Gandhi Road',
-      area: 'RS Puram',
-      city: 'Coimbatore',
-      district: 'Coimbatore',
-      pincode: '641002',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    paymentMethod: 'COD',
-    paymentStatus: 'pending',
-    createdAt: '2024-11-25T15:45:00Z',
-    updatedAt: '2024-11-27T09:00:00Z',
-  },
-  {
-    id: 'ORD-003',
-    userId: 'user-003',
-    userName: 'Sneha Reddy',
-    userEmail: 'sneha@example.com',
-    userPhone: '+91 9876543214',
-    items: [
-      { productId: '2', productName: 'Cozy Pet Bed', productImage: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=100', price: 3299, quantity: 1 },
-      { productId: '8', productName: 'Pet Grooming Kit', productImage: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=100', price: 1299, quantity: 1 },
-    ],
-    subtotal: 4598,
-    shipping: 0,
-    tax: 414,
-    total: 5012,
-    status: 'processing',
-    shippingAddress: {
-      addressLine1: '789, Main Road',
-      area: 'Srirangam',
-      city: 'Tiruchirappalli',
-      district: 'Tiruchirappalli',
-      pincode: '620006',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    paymentMethod: 'Card',
-    paymentStatus: 'paid',
-    createdAt: '2024-11-28T11:20:00Z',
-    updatedAt: '2024-11-28T11:20:00Z',
-  },
-  {
-    id: 'ORD-004',
-    userId: 'user-001',
-    userName: 'Priya Sharma',
-    userEmail: 'priya@example.com',
-    userPhone: '+91 9876543212',
-    items: [
-      { productId: '10', productName: 'Automatic Pet Feeder', productImage: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=100', price: 4999, quantity: 1 },
-    ],
-    subtotal: 4999,
-    shipping: 0,
-    tax: 450,
-    total: 5449,
-    status: 'pending',
-    shippingAddress: {
-      addressLine1: '123, South Street',
-      area: 'Palayamkottai',
-      city: 'Tirunelveli',
-      district: 'Tirunelveli',
-      pincode: '627002',
-      state: 'Tamil Nadu',
-      country: 'India',
-    },
-    paymentMethod: 'UPI',
-    paymentStatus: 'pending',
-    createdAt: '2024-12-01T09:00:00Z',
-    updatedAt: '2024-12-01T09:00:00Z',
-  },
-]
-
-// Demo user carts
-const demoUserCarts: UserCart[] = [
-  {
-    userId: 'user-001',
-    userName: 'Priya Sharma',
-    userEmail: 'priya@example.com',
-    items: [
-      { productId: '15', productName: 'Dog Collar Premium', productImage: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100', price: 799, quantity: 2 },
-    ],
-    total: 1598,
-    updatedAt: '2024-12-01T08:30:00Z',
-  },
-  {
-    userId: 'user-002',
-    userName: 'Amit Patel',
-    userEmail: 'amit@example.com',
-    items: [
-      { productId: '7', productName: 'Cat Food Premium', productImage: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=100', price: 1899, quantity: 1 },
-      { productId: '12', productName: 'Cat Toy Set', productImage: 'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=100', price: 599, quantity: 3 },
-    ],
-    total: 3696,
-    updatedAt: '2024-12-01T10:15:00Z',
-  },
-  {
-    userId: 'user-003',
-    userName: 'Sneha Reddy',
-    userEmail: 'sneha@example.com',
-    items: [
-      { productId: '20', productName: 'Pet Carrier Bag', productImage: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=100', price: 2499, quantity: 1 },
-    ],
-    total: 2499,
-    updatedAt: '2024-11-30T16:45:00Z',
-  },
-]
-
-// Store passwords separately (in real app, this would be hashed in DB)
-const userPasswords: Record<string, string> = {
-  'admin-001': 'admin123',
-  'owner-001': 'owner123',
-  'user-001': 'user123',
-  'user-002': 'user123',
-  'user-003': 'user123',
-  'user-004': 'user123',
+function syncCookie(isAuthenticated: boolean, user: User | null) {
+  if (typeof document === 'undefined') return
+  try {
+    if (!isAuthenticated || !user) {
+      document.cookie = 'bowpaw-auth=; path=/; max-age=0'
+      return
+    }
+    const value = encodeURIComponent(JSON.stringify({
+      state: { isAuthenticated, currentUser: { id: user.id, role: user.role } },
+    }))
+    document.cookie = `bowpaw-auth=${value}; path=/; max-age=86400; SameSite=Lax`
+  } catch {}
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -396,330 +151,265 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
-      users: demoUsers.map(({ password, ...user }) => user),
-      passwords: userPasswords,
-      userCarts: demoUserCarts,
-      orders: demoOrders,
+      users: [],
+      userCarts: [],
+      orders: [],
       otpSession: null,
 
+      // ── OTP (kept for compatibility) ────────────────────────────────
       sendOTP: (mobile) => {
-        // Validate mobile number
         const mobileRegex = /^[6-9]\d{9}$/
         if (!mobileRegex.test(mobile)) {
           return { success: false, message: 'Please enter a valid 10-digit mobile number' }
         }
-
-        // Generate 6-digit OTP (in real app, send via SMS)
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
-        const expiresAt = Date.now() + 5 * 60 * 1000 // 5 minutes
-
-        set({
-          otpSession: {
-            mobile,
-            otp,
-            expiresAt,
-            verified: false,
-          },
-        })
-
-        // For demo, return OTP (in real app, send via SMS)
-        return { 
-          success: true, 
-          message: `OTP sent to ${mobile}. Demo OTP: ${otp}`,
-          otp // Remove this in production
-        }
+        const expiresAt = Date.now() + 5 * 60 * 1000
+        set({ otpSession: { mobile, otp, expiresAt, verified: false } })
+        return { success: true, message: `OTP sent to ${mobile}. Demo OTP: ${otp}`, otp }
       },
 
       verifyOTP: (mobile, otp) => {
         const { otpSession } = get()
-
-        if (!otpSession) {
-          return { success: false, message: 'No OTP session found. Please request a new OTP.' }
-        }
-
-        if (otpSession.mobile !== mobile) {
-          return { success: false, message: 'Mobile number mismatch' }
-        }
-
+        if (!otpSession) return { success: false, message: 'No OTP session found.' }
+        if (otpSession.mobile !== mobile) return { success: false, message: 'Mobile number mismatch' }
         if (Date.now() > otpSession.expiresAt) {
           set({ otpSession: null })
-          return { success: false, message: 'OTP has expired. Please request a new one.' }
+          return { success: false, message: 'OTP has expired.' }
         }
-
-        if (otpSession.otp !== otp) {
-          return { success: false, message: 'Invalid OTP. Please try again.' }
-        }
-
-        set({
-          otpSession: { ...otpSession, verified: true },
-        })
-
+        if (otpSession.otp !== otp) return { success: false, message: 'Invalid OTP.' }
+        set({ otpSession: { ...otpSession, verified: true } })
         return { success: true, message: 'OTP verified successfully!' }
       },
 
       loginWithMobileOTP: (mobile) => {
         const { otpSession, users } = get()
-
-        if (!otpSession || !otpSession.verified || otpSession.mobile !== mobile) {
+        if (!otpSession?.verified || otpSession.mobile !== mobile) {
           return { success: false, message: 'Please verify OTP first' }
         }
-
-        // Find user by mobile
         const user = users.find(u => u.mobile === mobile)
-
-        if (!user) {
-          return { success: false, message: 'No account found with this mobile number. Please register.' }
-        }
-
-        if (user.status !== 'active') {
-          return { success: false, message: 'Your account is not active. Please contact support.' }
-        }
-
-        set({ 
-          currentUser: user, 
-          isAuthenticated: true,
-          otpSession: null,
-        })
-
+        if (!user) return { success: false, message: 'No account found with this mobile number.' }
+        if (user.status !== 'active') return { success: false, message: 'Account not active.' }
+        set({ currentUser: user, isAuthenticated: true, otpSession: null })
+        syncCookie(true, user)
         return { success: true, message: 'Login successful!' }
       },
 
-      loginWithPassword: (emailOrMobile, password) => {
-        const { users, passwords } = get()
-        const identifier = emailOrMobile.trim().toLowerCase()
-        const mobileIdentifier = emailOrMobile.replace(/\D/g, '')
+      // ── Firebase login ──────────────────────────────────────────────
+      loginWithPassword: async (emailOrMobile, password) => {
+        try {
+          // Determine if input is email or mobile
+          const isEmail = emailOrMobile.includes('@')
+          let email = emailOrMobile.trim().toLowerCase()
 
-        // Find user by email or mobile
-        const user = users.find(u => 
-          u.email?.toLowerCase() === identifier || u.mobile === mobileIdentifier
-        )
+          if (!isEmail) {
+            // Find email by mobile from cached users
+            const { users } = get()
+            const found = users.find(u => u.mobile === emailOrMobile.replace(/\D/g, ''))
+            if (!found?.email) {
+              return { success: false, message: 'No account found with this mobile number' }
+            }
+            email = found.email
+          }
 
-        if (!user) {
-          return { success: false, message: 'No account found with this email/mobile' }
+          const user = await firebaseSignIn(email, password)
+          if (!user) return { success: false, message: 'Account not found in database' }
+          if (user.status !== 'active') return { success: false, message: 'Account is not active' }
+
+          set({ currentUser: user, isAuthenticated: true })
+          syncCookie(true, user)
+          return { success: true, message: 'Login successful!' }
+        } catch (err: any) {
+          const code = err?.code ?? ''
+          if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+            return { success: false, message: 'No account found with this email/mobile' }
+          }
+          if (code === 'auth/wrong-password') {
+            return { success: false, message: 'Invalid password' }
+          }
+          if (code === 'auth/too-many-requests') {
+            return { success: false, message: 'Too many attempts. Please try again later.' }
+          }
+          if (code === 'auth/operation-not-allowed') {
+            return { success: false, message: 'Email/password sign-in is not enabled. Please contact support.' }
+          }
+          if (code === 'auth/network-request-failed') {
+            return { success: false, message: 'Network error. Please check your connection.' }
+          }
+          console.error('Login error:', code, err?.message)
+          return { success: false, message: err?.message ?? 'Login failed. Please try again.' }
         }
-
-        if (user.status !== 'active') {
-          return { success: false, message: 'Your account is not active. Please contact support.' }
-        }
-
-        // Check password
-        const storedPassword = passwords[user.id] ?? userPasswords[user.id]
-        if (!storedPassword || storedPassword !== password) {
-          return { success: false, message: 'Invalid password' }
-        }
-
-        set({ currentUser: user, isAuthenticated: true })
-
-        return { success: true, message: 'Login successful!' }
       },
 
-      register: (userData) => {
-        const { users, otpSession } = get()
-
-        // Validate OTP verification
-        if (!otpSession || !otpSession.verified || otpSession.mobile !== userData.mobile) {
-          return { success: false, message: 'Please verify your mobile number with OTP first' }
-        }
-
-        // Check if mobile already exists
-        if (users.some(u => u.mobile === userData.mobile)) {
-          return { success: false, message: 'Mobile number already registered' }
-        }
-
-        // Check if email already exists (if provided)
-        if (userData.email && users.some(u => u.email === userData.email)) {
-          return { success: false, message: 'Email already registered' }
-        }
-
-        // Create new user
-        const newUser: User = {
-          id: `user-${Date.now()}`,
-          name: userData.name,
-          mobile: userData.mobile,
-          email: userData.email,
-          role: 'user',
-          status: 'active',
-          address: userData.address,
-          createdAt: new Date().toISOString(),
-        }
-
-        // Store password if provided
-        if (userData.password) {
-          userPasswords[newUser.id] = userData.password
-        }
-
-        set(state => ({
-          users: [...state.users, newUser],
-          passwords: userData.password
-            ? { ...state.passwords, [newUser.id]: userData.password }
-            : state.passwords,
-          currentUser: newUser,
-          isAuthenticated: true,
-          otpSession: null,
-        }))
-
-        return { success: true, message: 'Registration successful! Welcome to BowPaw!' }
+      // ── Firebase register ───────────────────────────────────────────
+      register: () => {
+        return { success: false, message: 'Use registerWithPassword instead' }
       },
 
-      registerWithPassword: (userData) => {
-        const { users } = get()
+      registerWithPassword: async (userData) => {
         const mobile = userData.mobile.replace(/\D/g, '')
         const email = userData.email.trim().toLowerCase()
 
-        if (!userData.name.trim()) {
-          return { success: false, message: 'Please enter your full name' }
+        if (!userData.name.trim()) return { success: false, message: 'Please enter your full name' }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'Please enter a valid email address' }
+        if (!/^[6-9]\d{9}$/.test(mobile)) return { success: false, message: 'Please enter a valid 10-digit mobile number' }
+        if (userData.password.length < 6) return { success: false, message: 'Password must be at least 6 characters' }
+        if (email === OWNER_EMAIL) return { success: false, message: 'This email is not available for registration' }
+
+        try {
+          const newUser = await firebaseRegister(email, userData.password, userData.name.trim(), mobile, userData.district)
+          set(state => ({
+            users: [...state.users, newUser],
+            currentUser: newUser,
+            isAuthenticated: true,
+          }))
+          syncCookie(true, newUser)
+          return { success: true, message: 'Registration successful!' }
+        } catch (err: any) {
+          const code = err?.code ?? ''
+          if (code === 'auth/email-already-in-use') return { success: false, message: 'Email already registered' }
+          if (code === 'auth/operation-not-allowed') return { success: false, message: 'Email/password sign-in is not enabled. Please contact support.' }
+          if (code === 'auth/weak-password') return { success: false, message: 'Password is too weak. Use at least 6 characters.' }
+          if (code === 'auth/invalid-api-key') return { success: false, message: 'Firebase configuration error. Please contact support.' }
+          if (code === 'auth/network-request-failed') return { success: false, message: 'Network error. Please check your connection.' }
+          console.error('Register error:', code, err?.message)
+          return { success: false, message: err?.message ?? 'Registration failed. Please try again.' }
         }
-
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          return { success: false, message: 'Please enter a valid email address' }
-        }
-
-        if (!/^[6-9]\d{9}$/.test(mobile)) {
-          return { success: false, message: 'Please enter a valid 10-digit mobile number' }
-        }
-
-        if (userData.password.length < 6) {
-          return { success: false, message: 'Password must be at least 6 characters' }
-        }
-
-        if (users.some((user) => user.email?.toLowerCase() === email)) {
-          return { success: false, message: 'Email already registered' }
-        }
-
-        if (users.some((user) => user.mobile === mobile)) {
-          return { success: false, message: 'Mobile number already registered' }
-        }
-
-        const newUser: User = {
-          id: `user-${Date.now()}`,
-          name: userData.name.trim(),
-          email,
-          mobile,
-          role: 'user',
-          status: 'active',
-          address: {
-            addressLine1: '',
-            area: '',
-            city: '',
-            district: userData.district,
-            pincode: '',
-            state: 'Tamil Nadu',
-            country: 'India',
-          },
-          createdAt: new Date().toISOString(),
-        }
-
-        userPasswords[newUser.id] = userData.password
-
-        set((state) => ({
-          users: [...state.users, newUser],
-          passwords: { ...state.passwords, [newUser.id]: userData.password },
-          currentUser: newUser,
-          isAuthenticated: true,
-          otpSession: null,
-        }))
-
-        return { success: true, message: 'Registration successful!' }
       },
 
-      logout: () => {
-        set({ currentUser: null, isAuthenticated: false, otpSession: null })
+      // ── Firebase logout ─────────────────────────────────────────────
+      logout: async () => {
+        await firebaseSignOut()
+        set({ currentUser: null, isAuthenticated: false, otpSession: null, orders: [] })
+        syncCookie(false, null)
       },
 
       switchAccount: (userId) => {
+        const { currentUser, users } = get()
+        if (currentUser?.role !== 'owner') return
+        const user = users.find(u => u.id === userId)
+        if (user) set({ currentUser: user })
+      },
+
+      // ── Admin: fetch all data from Firestore ────────────────────────
+      fetchAdminData: async () => {
         const { currentUser } = get()
-        if (currentUser?.role !== 'admin' && currentUser?.role !== 'owner') {
-          return
-        }
-        
-        const user = get().users.find(u => u.id === userId)
-        if (user) {
-          set({ currentUser: user })
-        }
+        if (currentUser?.role !== 'owner') return
+        const [orders, users, carts] = await Promise.all([
+          getAllOrdersFromDB(),
+          getAllUsersFromDB(),
+          getAllCartsFromDB(),
+        ])
+        set({ orders, users, userCarts: carts })
       },
 
       getAllUserCarts: () => {
-        const { currentUser } = get()
-        if (currentUser?.role === 'admin' || currentUser?.role === 'owner') {
-          return get().userCarts
-        }
+        const { currentUser, userCarts } = get()
+        if (currentUser?.role === 'owner') return userCarts
         return []
       },
 
       getAllOrders: () => {
-        const { currentUser } = get()
-        if (currentUser?.role === 'admin' || currentUser?.role === 'owner') {
-          return get().orders
-        }
+        const { currentUser, orders } = get()
+        if (currentUser?.role === 'owner') return orders
         return []
       },
 
-      getUserOrders: (userId) => {
-        return get().orders.filter(order => order.userId === userId)
-      },
+      getUserOrders: (userId) => get().orders.filter(o => o.userId === userId),
 
-      updateOrderStatus: (orderId, status) => {
+      updateOrderStatus: async (orderId, status) => {
         const { currentUser } = get()
-        if (currentUser?.role !== 'admin' && currentUser?.role !== 'owner') {
-          return
-        }
-        
+        if (currentUser?.role !== 'owner') return
+        await updateOrderStatusInDB(orderId, status)
         set(state => ({
-          orders: state.orders.map(order =>
-            order.id === orderId
-              ? { ...order, status, updatedAt: new Date().toISOString() }
-              : order
+          orders: state.orders.map(o =>
+            o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o
           ),
         }))
       },
 
+      // ── User: cart ──────────────────────────────────────────────────
       updateUserCart: (cart) => {
+        saveCartToDB(cart).catch(() => {})
         set(state => {
-          const existingIndex = state.userCarts.findIndex(c => c.userId === cart.userId)
-          if (existingIndex >= 0) {
-            const newCarts = [...state.userCarts]
-            newCarts[existingIndex] = cart
-            return { userCarts: newCarts }
+          const idx = state.userCarts.findIndex(c => c.userId === cart.userId)
+          if (idx >= 0) {
+            const updated = [...state.userCarts]
+            updated[idx] = cart
+            return { userCarts: updated }
           }
           return { userCarts: [...state.userCarts, cart] }
         })
       },
 
-      createOrder: (orderData) => {
+      // ── User: orders ────────────────────────────────────────────────
+      createOrder: async (orderData) => {
+        const id = await createOrderInDB(orderData)
         const newOrder: Order = {
           ...orderData,
-          id: `ORD-${Date.now()}`,
+          id,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
-        
-        set(state => ({
-          orders: [...state.orders, newOrder],
-        }))
-        
+        set(state => ({ orders: [...state.orders, newOrder] }))
         return newOrder
       },
 
       getMyOrders: () => {
         const { currentUser, orders } = get()
         if (!currentUser) return []
-        return orders.filter(order => order.userId === currentUser.id)
+        return orders.filter(o => o.userId === currentUser.id)
       },
 
-      updateProfile: (updates) => {
+      fetchMyOrders: async () => {
         const { currentUser } = get()
         if (!currentUser) return
+        const orders = await getUserOrders(currentUser.id)
+        set(state => ({
+          orders: [
+            ...state.orders.filter(o => o.userId !== currentUser.id),
+            ...orders,
+          ],
+        }))
+      },
 
+      // ── User: profile ───────────────────────────────────────────────
+      updateProfile: async (updates) => {
+        const { currentUser } = get()
+        if (!currentUser) return
+        await updateUserProfile(currentUser.id, updates)
         set(state => ({
           currentUser: { ...currentUser, ...updates },
-          users: state.users.map(u =>
-            u.id === currentUser.id ? { ...u, ...updates } : u
-          ),
+          users: state.users.map(u => u.id === currentUser.id ? { ...u, ...updates } : u),
         }))
+      },
+
+      updatePassword: async (_currentPassword, newPassword) => {
+        try {
+          if (newPassword.length < 6) {
+            return { success: false, message: 'New password must be at least 6 characters' }
+          }
+
+          await updateCurrentUserPassword(newPassword)
+          return { success: true, message: 'Password updated successfully' }
+        } catch (err: any) {
+          if (err?.code === 'auth/requires-recent-login') {
+            return { success: false, message: 'Please sign out and sign in again before changing your password.' }
+          }
+
+          return { success: false, message: err?.message ?? 'Unable to update password right now.' }
+        }
       },
     }),
     {
       name: 'bowpaw-auth',
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+        isAuthenticated: state.isAuthenticated,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        syncCookie(state.isAuthenticated, state.currentUser ?? null)
+      },
     }
   )
 )

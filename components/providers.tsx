@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 import { ThemeProvider } from "next-themes";
 import { ReactNode, useEffect } from "react";
 import InitialLoader from "./providers/InitialLoader";
@@ -41,7 +42,9 @@ export function Providers({ children }: { children: ReactNode }) {
     >
       <InitialLoader>
         <PersistedStoreHydrator />
-        <PageTransitionLoader />
+        <Suspense fallback={null}>
+          <PageTransitionLoader />
+        </Suspense>
         <ServiceWorkerRegistration />
         {children}
         <MobileBottomNav />

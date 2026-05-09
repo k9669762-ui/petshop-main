@@ -75,41 +75,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://images.unsplash.com" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              (function () {
+              if ("serviceWorker" in navigator) {
                 var isLocalhost = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
-                if (!isLocalhost) return;
-
-                var reloadKey = "rinbow-sw-local-cleaned";
-                var hadController = Boolean(navigator.serviceWorker && navigator.serviceWorker.controller);
-
-                if ("serviceWorker" in navigator) {
-                  navigator.serviceWorker.getRegistrations()
-                    .then(function (registrations) {
-                      return Promise.all(registrations.map(function (registration) {
-                        return registration.unregister();
-                      }));
-                    })
-                    .then(function () {
-                      if ("caches" in window) {
-                        return window.caches.keys().then(function (cacheNames) {
-                          return Promise.all(cacheNames.map(function (cacheName) {
-                            return window.caches.delete(cacheName);
-                          }));
-                        });
-                      }
-                    })
-                    .then(function () {
-                      if (hadController && !sessionStorage.getItem(reloadKey)) {
-                        sessionStorage.setItem(reloadKey, "1");
-                        window.location.reload();
-                      }
-                    })
-                    .catch(function () {});
+                if (isLocalhost) {
+                  navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(reg){reg.unregister();});});
                 }
-              })();
+              }
             `,
           }}
         />
