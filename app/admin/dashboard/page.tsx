@@ -10,6 +10,7 @@ import {
   CheckCircle, Clock, Truck, XCircle, ArrowRight, UserCircle
 } from 'lucide-react'
 import { useAuthStore, Order, UserCart } from '@/store/useAuthStore'
+import { isAdminEmail } from '@/lib/authConfig'
 import { formatPrice } from '@/lib/utils'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false)
 
   // Protect route — middleware handles redirect, this is a safety net
-  if (!currentUser || currentUser.role !== 'owner') {
+  if (!currentUser || currentUser.role !== 'owner' || !isAdminEmail(currentUser.email)) {
     return null
   }
 

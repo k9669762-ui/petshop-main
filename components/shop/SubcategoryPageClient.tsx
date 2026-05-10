@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { products, categories } from "@/lib/data";
+import { categories } from "@/lib/data";
+import { useStorefrontProducts } from "@/lib/storefrontProducts";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 
@@ -32,6 +33,7 @@ export default function SubcategoryPageClient({ categorySlug, subcategorySlug }:
   const [priceRange, setPriceRange] = useState([0, 150000]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { products } = useStorefrontProducts();
 
   const filteredProducts = useMemo(() => {
     let result = products.filter(
@@ -64,7 +66,7 @@ export default function SubcategoryPageClient({ categorySlug, subcategorySlug }:
     }
 
     return result;
-  }, [categorySlug, subcategorySlug, priceRange, inStockOnly, sortBy]);
+  }, [products, categorySlug, subcategorySlug, priceRange, inStockOnly, sortBy]);
 
   const clearFilters = () => {
     setPriceRange([0, 150000]);
@@ -262,4 +264,3 @@ export default function SubcategoryPageClient({ categorySlug, subcategorySlug }:
     </main>
   );
 }
-

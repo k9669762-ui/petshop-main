@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCartStore, useWishlistStore, Product } from "@/lib/store";
 import { formatPrice, getDiscountPercentage } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
+import { getProductHref } from "@/lib/productLinks";
 
 interface ProductCardProps {
   product: Product;
@@ -58,7 +59,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       whileHover={{ y: -8 }}
       className="h-full"
     >
-      <Link href={`/product/${product.slug}`}>
+      <Link href={getProductHref(product)}>
         <motion.div 
           className="group bg-card rounded-2xl overflow-hidden border shadow-sm hover:shadow-2xl transition-all duration-500 h-full flex flex-col"
           whileHover={{ 

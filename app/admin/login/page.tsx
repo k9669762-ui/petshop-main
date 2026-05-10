@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock, Mail, PawPrint } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
+import { isAdminEmail } from '@/lib/authConfig'
 import Link from 'next/link'
 
 export default function AdminLoginPage() {
@@ -18,7 +19,7 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   // Redirect if already logged in as admin/owner
-  if (isAuthenticated && (currentUser?.role === 'admin' || currentUser?.role === 'owner')) {
+  if (isAuthenticated && currentUser?.role === 'owner' && isAdminEmail(currentUser.email)) {
     router.push('/admin/dashboard')
     return null
   }
@@ -28,14 +29,22 @@ export default function AdminLoginPage() {
     setError('')
     setIsLoading(true)
 
-    const result = await loginWithPassword(email, password)
+    const trimmedEmail = email.trim().toLowerCase()
+
+    if (!isAdminEmail(trimmedEmail)) {
+      setError('Access denied. Invalid admin account.')
+      setIsLoading(false)
+      return
+    }
+
+    const result = await loginWithPassword(trimmedEmail, password)
     
     if (result.success) {
       const user = useAuthStore.getState().currentUser
-      if (user?.role === 'admin' || user?.role === 'owner') {
+      if (user?.role === 'owner' && isAdminEmail(user.email)) {
         router.push('/admin/dashboard')
       } else {
-        setError('Access denied. Admin or Owner account required.')
+        setError('Access denied. Admin account required.')
         await useAuthStore.getState().logout()
       }
     } else {
@@ -120,7 +129,7 @@ export default function AdminLoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="rainbowaquariumndbi@gmail.com"
+                  placeholder="admin@bowpow.com"
                   required
                   className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                 />

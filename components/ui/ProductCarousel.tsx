@@ -20,6 +20,7 @@ import { formatPrice, getDiscountPercentage, cn } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { getProductHref } from '@/lib/productLinks'
 
 import 'swiper/css'
 import 'swiper/css/pagination'
@@ -98,7 +99,7 @@ function ProductCard({ product, className }: { product: Product; className?: str
   const discount = product.originalPrice ? getDiscountPercentage(product.originalPrice, product.price) : 0
 
   return (
-    <Link href={`/product/${product.slug}`} className={cn("block h-full select-none touch-manipulation", className)} draggable={false}>
+    <Link href={getProductHref(product)} className={cn("block h-full select-none touch-manipulation", className)} draggable={false}>
       <div 
         className="group bg-white rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 h-full flex flex-col shadow-sm hover:shadow-xl active:scale-[0.98] transition-all duration-300"
         onMouseEnter={() => setIsHovered(true)}

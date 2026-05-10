@@ -6,7 +6,9 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Search, X, TrendingUp } from 'lucide-react'
 import { useUIStore } from '@/store/useUIStore'
-import { searchProducts, products } from '@/lib/data'
+import { searchProducts } from '@/lib/data'
+import { useStorefrontProducts } from '@/lib/storefrontProducts'
+import { getProductHref } from '@/lib/productLinks'
 import { formatPrice } from '@/lib/utils'
 import { Product } from '@/lib/store'
 
@@ -17,6 +19,7 @@ export default function SearchDropdown() {
   const [results, setResults] = useState<Product[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const { closeSearch } = useUIStore()
+  const { products } = useStorefrontProducts()
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -24,12 +27,12 @@ export default function SearchDropdown() {
 
   useEffect(() => {
     if (query.length > 1) {
-      const searchResults = searchProducts(query).slice(0, 6)
+      const searchResults = searchProducts(query, products).slice(0, 6)
       setResults(searchResults)
     } else {
       setResults([])
     }
-  }, [query])
+  }, [query, products])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +88,7 @@ export default function SearchDropdown() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link
-                    href={`/product/${product.slug}`}
+                    href={getProductHref(product)}
                     onClick={closeSearch}
                     className="block group"
                   >
@@ -152,7 +155,7 @@ export default function SearchDropdown() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link
-                    href={`/product/${product.slug}`}
+                    href={getProductHref(product)}
                     onClick={closeSearch}
                     className="block group"
                   >

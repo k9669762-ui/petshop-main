@@ -60,8 +60,12 @@ export default function ProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
-    await deleteProductFromDB(id);
-    setProducts(prev => prev.filter(p => p.id !== id));
+    try {
+      await deleteProductFromDB(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      console.error("Unable to delete product:", err?.code ?? err?.message ?? err);
+    }
   };
 
   const filteredProducts = products.filter(p => {

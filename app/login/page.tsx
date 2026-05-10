@@ -19,6 +19,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { 
     isAuthenticated, 
+    currentUser,
     sendOTP, 
     verifyOTP, 
     loginWithMobileOTP, 
@@ -59,9 +60,9 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/account')
+      router.push(currentUser?.role === 'owner' ? '/owner/dashboard' : '/account')
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, currentUser?.role, router])
 
   // Resend timer countdown
   useEffect(() => {
@@ -114,7 +115,8 @@ export default function LoginPage() {
       
       if (loginResult.success) {
         setSuccess('Login successful! Redirecting...')
-        setTimeout(() => router.push('/account'), 1000)
+        const loggedInUser = useAuthStore.getState().currentUser
+        setTimeout(() => router.push(loggedInUser?.role === 'owner' ? '/owner/dashboard' : '/account'), 1000)
       } else if (loginResult.message.includes('register')) {
         // New user - go to registration
         setIsNewUser(true)
@@ -147,7 +149,8 @@ export default function LoginPage() {
     
     if (result.success) {
       setSuccess('Login successful! Redirecting...')
-      setTimeout(() => router.push('/account'), 1000)
+      const loggedInUser = useAuthStore.getState().currentUser
+      setTimeout(() => router.push(loggedInUser?.role === 'owner' ? '/owner/dashboard' : '/account'), 1000)
     } else {
       setError(result.message)
     }

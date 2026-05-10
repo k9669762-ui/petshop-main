@@ -17,7 +17,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ProductCarousel from "@/components/ui/ProductCarousel";
-import { products, categories, searchProducts } from "@/lib/data";
+import { categories, searchProducts } from "@/lib/data";
+import { useStorefrontProducts } from "@/lib/storefrontProducts";
 import { formatPrice } from "@/lib/utils";
 
 function ShopPageContent() {
@@ -30,6 +31,7 @@ function ShopPageContent() {
   const [urlFilter, setUrlFilter] = useState("");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { products } = useStorefrontProducts();
 
   useEffect(() => {
     const category = searchParams.get("category");
@@ -93,7 +95,7 @@ function ShopPageContent() {
     }
 
     return result;
-  }, [selectedCategories, searchQuery, priceRange, inStockOnly, sortBy, urlFilter]);
+  }, [products, selectedCategories, searchQuery, priceRange, inStockOnly, sortBy, urlFilter]);
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>

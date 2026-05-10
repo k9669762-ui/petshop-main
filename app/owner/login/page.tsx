@@ -27,7 +27,7 @@ export default function OwnerLoginPage() {
 
     const trimmedEmail = formData.email.trim().toLowerCase();
 
-    if (trimmedEmail !== "rainbowaquariumndbi@gmail.com") {
+    if (trimmedEmail !== "admin@bowpow.com") {
       setError("Access denied. Invalid owner account.");
       setIsLoading(false);
       return;

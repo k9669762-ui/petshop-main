@@ -1,3 +1,5 @@
+"use client";
+
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
@@ -7,9 +9,10 @@ import { BlogPreview } from "@/components/blog-preview";
 import { Newsletter } from "@/components/newsletter";
 import ProductCarousel from "@/components/ui/ProductCarousel";
 import { TamilNaduDeliveryCarousel } from "@/components/tamil-nadu-delivery";
-import { products } from "@/lib/data";
+import { useStorefrontProducts } from "@/lib/storefrontProducts";
 
 export default function HomePage() {
+  const { products } = useStorefrontProducts();
   const newArrivals = products.filter(p => p.isNew === true);
   const featuredProducts = products.filter(p => p.isFeatured === true);
   const accessories = products.filter(p => p.category === "accessories");

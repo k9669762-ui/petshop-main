@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { products, categories } from "@/lib/data";
+import { categories } from "@/lib/data";
+import { useStorefrontProducts } from "@/lib/storefrontProducts";
 import { formatPrice } from "@/lib/utils";
 import Link from "next/link";
 
@@ -31,6 +32,7 @@ export default function CategoryPageClient({ categorySlug }: CategoryPageClientP
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const { products } = useStorefrontProducts();
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((p) => p.category === categorySlug);
@@ -68,7 +70,7 @@ export default function CategoryPageClient({ categorySlug }: CategoryPageClientP
     }
 
     return result;
-  }, [categorySlug, selectedSubcategories, priceRange, inStockOnly, sortBy]);
+  }, [products, categorySlug, selectedSubcategories, priceRange, inStockOnly, sortBy]);
 
   const toggleSubcategory = (subcategory: string) => {
     setSelectedSubcategories((prev) =>
@@ -315,4 +317,3 @@ export default function CategoryPageClient({ categorySlug }: CategoryPageClientP
     </main>
   );
 }
-

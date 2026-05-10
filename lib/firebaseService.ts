@@ -21,8 +21,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from './firebase'
 import type { User, Order, UserCart, UserAddress } from '@/store/useAuthStore'
-
-const OWNER_EMAIL = 'rainbowaquariumndbi@gmail.com'
+import { ADMIN_EMAIL, isAdminEmail } from './authConfig'
 
 const timestampToISO = (value: unknown) =>
   value instanceof Timestamp ? value.toDate().toISOString() : typeof value === 'string' ? value : new Date().toISOString()
@@ -40,11 +39,11 @@ export async function firebaseSignIn(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(auth, email, password)
   let profile = await getUserProfile(cred.user.uid)
 
-  if (!profile && cred.user.email?.toLowerCase() === OWNER_EMAIL) {
+  if (!profile && isAdminEmail(cred.user.email)) {
     profile = {
       id: cred.user.uid,
       name: cred.user.displayName || 'Rainbow Aqua Owner',
-      email: cred.user.email,
+      email: cred.user.email || ADMIN_EMAIL,
       mobile: '',
       role: 'owner',
       status: 'active',
@@ -55,6 +54,20 @@ export async function firebaseSignIn(email: string, password: string) {
       ...profile,
       createdAt: serverTimestamp(),
     })
+  }
+
+  if (profile && isAdminEmail(cred.user.email) && profile.role !== 'owner') {
+    profile = {
+      ...profile,
+      email: cred.user.email || profile.email,
+      role: 'owner',
+      status: 'active',
+    }
+
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      ...profile,
+      updatedAt: serverTimestamp(),
+    }, { merge: true })
   }
 
   return profile

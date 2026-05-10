@@ -15,6 +15,7 @@ import {
   getAllCartsFromDB,
   updateCurrentUserPassword,
 } from '@/lib/firebaseService'
+import { isAdminEmail } from '@/lib/authConfig'
 
 export type UserRole = 'guest' | 'user' | 'owner' | 'admin'
 export type AccountStatus = 'active' | 'inactive' | 'suspended'
@@ -130,8 +131,6 @@ interface AuthState {
 }
 
 // ── Owner hardcoded credentials (Firebase Auth handles password) ──────
-const OWNER_EMAIL = 'rainbowaquariumndbi@gmail.com'
-
 function syncCookie(isAuthenticated: boolean, user: User | null) {
   if (typeof document === 'undefined') return
   try {
@@ -140,7 +139,7 @@ function syncCookie(isAuthenticated: boolean, user: User | null) {
       return
     }
     const value = encodeURIComponent(JSON.stringify({
-      state: { isAuthenticated, currentUser: { id: user.id, role: user.role } },
+      state: { isAuthenticated, currentUser: { id: user.id, role: user.role, email: user.email } },
     }))
     document.cookie = `bowpaw-auth=${value}; path=/; max-age=86400; SameSite=Lax`
   } catch {}
@@ -253,7 +252,7 @@ export const useAuthStore = create<AuthState>()(
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'Please enter a valid email address' }
         if (!/^[6-9]\d{9}$/.test(mobile)) return { success: false, message: 'Please enter a valid 10-digit mobile number' }
         if (userData.password.length < 6) return { success: false, message: 'Password must be at least 6 characters' }
-        if (email === OWNER_EMAIL) return { success: false, message: 'This email is not available for registration' }
+        if (isAdminEmail(email)) return { success: false, message: 'This email is not available for registration' }
 
         try {
           const newUser = await firebaseRegister(email, userData.password, userData.name.trim(), mobile, userData.district)
@@ -294,12 +293,17 @@ export const useAuthStore = create<AuthState>()(
       fetchAdminData: async () => {
         const { currentUser } = get()
         if (currentUser?.role !== 'owner') return
-        const [orders, users, carts] = await Promise.all([
-          getAllOrdersFromDB(),
-          getAllUsersFromDB(),
-          getAllCartsFromDB(),
-        ])
-        set({ orders, users, userCarts: carts })
+        try {
+          const [orders, users, carts] = await Promise.all([
+            getAllOrdersFromDB(),
+            getAllUsersFromDB(),
+            getAllCartsFromDB(),
+          ])
+          set({ orders, users, userCarts: carts })
+        } catch (err: any) {
+          console.error('Unable to load admin data:', err?.code ?? err?.message ?? err)
+          set({ orders: [], users: [], userCarts: [] })
+        }
       },
 
       getAllUserCarts: () => {
@@ -319,12 +323,16 @@ export const useAuthStore = create<AuthState>()(
       updateOrderStatus: async (orderId, status) => {
         const { currentUser } = get()
         if (currentUser?.role !== 'owner') return
-        await updateOrderStatusInDB(orderId, status)
-        set(state => ({
-          orders: state.orders.map(o =>
-            o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o
-          ),
-        }))
+        try {
+          await updateOrderStatusInDB(orderId, status)
+          set(state => ({
+            orders: state.orders.map(o =>
+              o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o
+            ),
+          }))
+        } catch (err: any) {
+          console.error('Unable to update order status:', err?.code ?? err?.message ?? err)
+        }
       },
 
       // ── User: cart ──────────────────────────────────────────────────
@@ -363,13 +371,17 @@ export const useAuthStore = create<AuthState>()(
       fetchMyOrders: async () => {
         const { currentUser } = get()
         if (!currentUser) return
-        const orders = await getUserOrders(currentUser.id)
-        set(state => ({
-          orders: [
-            ...state.orders.filter(o => o.userId !== currentUser.id),
-            ...orders,
-          ],
-        }))
+        try {
+          const orders = await getUserOrders(currentUser.id)
+          set(state => ({
+            orders: [
+              ...state.orders.filter(o => o.userId !== currentUser.id),
+              ...orders,
+            ],
+          }))
+        } catch (err: any) {
+          console.error('Unable to load user orders:', err?.code ?? err?.message ?? err)
+        }
       },
 
       // ── User: profile ───────────────────────────────────────────────

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -25,13 +25,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCartStore, useWishlistStore } from "@/lib/store";
-import { products } from "@/lib/data";
 import { birdsAndFishProducts } from "@/lib/birdsAndFishData";
+import { useStorefrontProducts } from "@/lib/storefrontProducts";
+import type { Product } from "@/lib/store";
 import { formatPrice, getDiscountPercentage } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
-
-// Combine all products
-const allProducts = [...products, ...birdsAndFishProducts];
 
 const titleCase = (value: string) =>
   value
@@ -40,7 +38,7 @@ const titleCase = (value: string) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
-const getFallbackSpecifications = (product: (typeof allProducts)[number]) => {
+const getFallbackSpecifications = (product: Product) => {
   const baseSpecs: Record<string, string> = {
     "Product Type": titleCase(product.category),
     "Subcategory": product.subcategory ? titleCase(product.subcategory) : "General",
@@ -84,6 +82,16 @@ interface ProductPageClientProps {
 }
 
 export default function ProductPageClient({ slug }: ProductPageClientProps) {
+  const { products, isLoading } = useStorefrontProducts();
+  const allProducts = useMemo(() => {
+    const merged = new Map<string, Product>();
+    products.forEach((product) => merged.set(product.slug || product.id, product));
+    birdsAndFishProducts.forEach((product) => {
+      const key = product.slug || product.id;
+      if (!merged.has(key)) merged.set(key, product);
+    });
+    return Array.from(merged.values());
+  }, [products]);
   const product = allProducts.find((p) => p.slug === slug);
 
   const [quantity, setQuantity] = useState(1);
@@ -92,6 +100,18 @@ export default function ProductPageClient({ slug }: ProductPageClientProps) {
 
   const { addItem, toggleCart } = useCartStore();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
+
+  if (!product && isLoading) {
+    return (
+      <main className="min-h-screen">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <p className="text-muted-foreground">Loading product...</p>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
 
   if (!product) {
     return (
