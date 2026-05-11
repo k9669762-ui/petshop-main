@@ -25,6 +25,8 @@ import { useCartStore } from "@/lib/store";
 import { useCartStore as useLegacyCartStore } from "@/store/useCartStore";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useRouter } from "next/navigation";
 
 const steps = [
   { id: 1, name: "Shipping", icon: MapPin },
@@ -39,6 +41,8 @@ export default function CheckoutPage() {
     getSubtotal: getLegacySubtotal,
     clearCart: clearLegacyCart,
   } = useLegacyCartStore();
+  const { currentUser, createOrder } = useAuthStore();
+  const router = useRouter();
   const cartItems = items.length > 0 ? items : legacyItems;
   const [currentStep, setCurrentStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("razorpay");
@@ -79,18 +83,63 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Order Placed Successfully! 🎉",
-      description: "You'll receive an order confirmation email shortly.",
-      variant: "success",
-    });
-    
-    clearCart();
-    clearLegacyCart();
-    // In real app, redirect to order confirmation page
-    setIsProcessing(false);
+    try {
+      const tax = Math.round(subtotal * 0.09);
+      const orderTotal = subtotal + shipping + tax;
+
+      const orderItems = cartItems.map((item) => ({
+        productId: item.product.id ?? '',
+        productName: item.product.name ?? '',
+        productImage: item.product.images?.[0] ?? '',
+        price: item.product.price ?? 0,
+        quantity: item.quantity ?? 1,
+        ...(item.selectedVariants && Object.keys(item.selectedVariants).length > 0
+          ? { variant: Object.values(item.selectedVariants).join(', ') }
+          : {}),
+      }));
+
+      await createOrder({
+        userId: currentUser?.id ?? 'guest',
+        userName: `${shippingInfo.firstName} ${shippingInfo.lastName}`.trim() || 'Customer',
+        userEmail: shippingInfo.email || '',
+        userPhone: shippingInfo.phone || '',
+        items: orderItems,
+        subtotal,
+        shipping,
+        tax,
+        total: orderTotal,
+        status: 'pending',
+        shippingAddress: {
+          addressLine1: shippingInfo.address || '',
+          area: shippingInfo.city || '',
+          city: shippingInfo.city || '',
+          district: shippingInfo.city || '',
+          pincode: shippingInfo.pincode || '',
+          state: 'Tamil Nadu',
+          country: 'India',
+        },
+        paymentMethod: paymentMethod === 'razorpay' ? 'Razorpay' : 'COD',
+        paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
+      });
+
+      clearCart();
+      clearLegacyCart();
+
+      toast({
+        title: 'Order Placed Successfully! 🎉',
+        description: 'Your order has been confirmed.',
+      });
+
+      router.push('/account/orders');
+    } catch (err: any) {
+      toast({
+        title: 'Order failed',
+        description: err?.message ?? 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (cartItems.length === 0) {

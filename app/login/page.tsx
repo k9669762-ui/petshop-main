@@ -9,7 +9,8 @@ import {
   ArrowLeft, ArrowRight, Loader2
 } from 'lucide-react'
 import { useAuthStore, UserAddress } from '@/store/useAuthStore'
-import { tamilNaduDistricts, tamilNaduCities, isValidTamilNaduPincode, isValidIndianMobile } from '@/lib/tamilnaduData'
+import { tamilNaduDistricts, tamilNaduCities, isValidTamilNaduPincode, isValidIndianMobile, normalizeIndianMobile } from '@/lib/tamilnaduData'
+import { isAdminEmail } from '@/lib/authConfig'
 import Link from 'next/link'
 
 type LoginMethod = 'otp' | 'password'
@@ -60,9 +61,9 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      router.push(currentUser?.role === 'owner' ? '/owner/dashboard' : '/account')
+      router.push(currentUser?.role === 'owner' && isAdminEmail(currentUser.email) ? '/owner/dashboard' : '/account')
     }
-  }, [isAuthenticated, currentUser?.role, router])
+  }, [isAuthenticated, currentUser?.role, currentUser?.email, router])
 
   // Resend timer countdown
   useEffect(() => {
@@ -76,15 +77,18 @@ export default function LoginPage() {
   const availableCities = district ? tamilNaduCities[district] || [] : []
 
   const handleSendOTP = async () => {
-    if (!isValidIndianMobile(mobile)) {
+    const normalizedMobile = normalizeIndianMobile(mobile)
+
+    if (!isValidIndianMobile(normalizedMobile)) {
       setError('Please enter a valid 10-digit mobile number')
       return
     }
 
     setIsLoading(true)
     setError('')
+    setMobile(normalizedMobile)
 
-    const result = sendOTP(mobile)
+    const result = sendOTP(normalizedMobile)
     
     if (result.success) {
       setOtpDisplay(result.otp || '')
@@ -99,6 +103,8 @@ export default function LoginPage() {
   }
 
   const handleVerifyOTP = async () => {
+    const normalizedMobile = normalizeIndianMobile(mobile)
+
     if (otp.length !== 6) {
       setError('Please enter a valid 6-digit OTP')
       return
@@ -107,16 +113,16 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
 
-    const result = verifyOTP(mobile, otp)
+    const result = verifyOTP(normalizedMobile, otp)
     
     if (result.success) {
       // Check if user exists
-      const loginResult = loginWithMobileOTP(mobile)
+      const loginResult = loginWithMobileOTP(normalizedMobile)
       
       if (loginResult.success) {
         setSuccess('Login successful! Redirecting...')
         const loggedInUser = useAuthStore.getState().currentUser
-        setTimeout(() => router.push(loggedInUser?.role === 'owner' ? '/owner/dashboard' : '/account'), 1000)
+        setTimeout(() => router.push(loggedInUser?.role === 'owner' && isAdminEmail(loggedInUser.email) ? '/owner/dashboard' : '/account'), 1000)
       } else if (loginResult.message.includes('register')) {
         // New user - go to registration
         setIsNewUser(true)
@@ -132,7 +138,9 @@ export default function LoginPage() {
   }
 
   const handlePasswordLogin = async () => {
-    if (!email && !mobile) {
+    const normalizedMobile = normalizeIndianMobile(mobile)
+
+    if (!email && !normalizedMobile) {
       setError('Please enter email or mobile number')
       return
     }
@@ -145,12 +153,12 @@ export default function LoginPage() {
     setIsLoading(true)
     setError('')
 
-    const result = await loginWithPassword(email || mobile, password)
+    const result = await loginWithPassword(email || normalizedMobile, password)
     
     if (result.success) {
       setSuccess('Login successful! Redirecting...')
       const loggedInUser = useAuthStore.getState().currentUser
-      setTimeout(() => router.push(loggedInUser?.role === 'owner' ? '/owner/dashboard' : '/account'), 1000)
+      setTimeout(() => router.push(loggedInUser?.role === 'owner' && isAdminEmail(loggedInUser.email) ? '/owner/dashboard' : '/account'), 1000)
     } else {
       setError(result.message)
     }
@@ -339,7 +347,7 @@ export default function LoginPage() {
                 <input
                   type="tel"
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  onChange={(e) => setMobile(normalizeIndianMobile(e.target.value).slice(0, 10))}
                   placeholder="98765 43210"
                   maxLength={10}
                   className="w-full pl-14 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none text-lg tracking-wider"
@@ -490,8 +498,9 @@ export default function LoginPage() {
                     value={email || mobile}
                     onChange={(e) => {
                       const value = e.target.value
-                      if (/^\d+$/.test(value)) {
-                        setMobile(value.slice(0, 10))
+                      const digits = normalizeIndianMobile(value)
+                      if (/^[\d\s()+-]+$/.test(value)) {
+                        setMobile(digits.slice(0, 10))
                         setEmail('')
                       } else {
                         setEmail(value)

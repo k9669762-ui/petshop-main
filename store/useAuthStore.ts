@@ -4,6 +4,7 @@ import {
   firebaseSignIn,
   firebaseRegister,
   firebaseSignOut,
+  firebaseCreateAdminAccount,
   getUserProfile,
   updateUserProfile,
   createOrderInDB,
@@ -15,7 +16,8 @@ import {
   getAllCartsFromDB,
   updateCurrentUserPassword,
 } from '@/lib/firebaseService'
-import { isAdminEmail } from '@/lib/authConfig'
+import { isAdminCredential, isAdminEmail } from '@/lib/authConfig'
+import { isValidIndianMobile, normalizeIndianMobile } from '@/lib/tamilnaduData'
 
 export type UserRole = 'guest' | 'user' | 'owner' | 'admin'
 export type AccountStatus = 'active' | 'inactive' | 'suspended'
@@ -157,20 +159,21 @@ export const useAuthStore = create<AuthState>()(
 
       // ── OTP (kept for compatibility) ────────────────────────────────
       sendOTP: (mobile) => {
-        const mobileRegex = /^[6-9]\d{9}$/
-        if (!mobileRegex.test(mobile)) {
+        const normalizedMobile = normalizeIndianMobile(mobile)
+        if (!isValidIndianMobile(normalizedMobile)) {
           return { success: false, message: 'Please enter a valid 10-digit mobile number' }
         }
         const otp = Math.floor(100000 + Math.random() * 900000).toString()
         const expiresAt = Date.now() + 5 * 60 * 1000
-        set({ otpSession: { mobile, otp, expiresAt, verified: false } })
-        return { success: true, message: `OTP sent to ${mobile}. Demo OTP: ${otp}`, otp }
+        set({ otpSession: { mobile: normalizedMobile, otp, expiresAt, verified: false } })
+        return { success: true, message: `OTP sent to ${normalizedMobile}. Demo OTP: ${otp}`, otp }
       },
 
       verifyOTP: (mobile, otp) => {
+        const normalizedMobile = normalizeIndianMobile(mobile)
         const { otpSession } = get()
         if (!otpSession) return { success: false, message: 'No OTP session found.' }
-        if (otpSession.mobile !== mobile) return { success: false, message: 'Mobile number mismatch' }
+        if (otpSession.mobile !== normalizedMobile) return { success: false, message: 'Mobile number mismatch' }
         if (Date.now() > otpSession.expiresAt) {
           set({ otpSession: null })
           return { success: false, message: 'OTP has expired.' }
@@ -181,11 +184,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithMobileOTP: (mobile) => {
+        const normalizedMobile = normalizeIndianMobile(mobile)
         const { otpSession, users } = get()
-        if (!otpSession?.verified || otpSession.mobile !== mobile) {
+        if (!otpSession?.verified || otpSession.mobile !== normalizedMobile) {
           return { success: false, message: 'Please verify OTP first' }
         }
-        const user = users.find(u => u.mobile === mobile)
+        const user = users.find(u => normalizeIndianMobile(u.mobile) === normalizedMobile)
         if (!user) return { success: false, message: 'No account found with this mobile number.' }
         if (user.status !== 'active') return { success: false, message: 'Account not active.' }
         set({ currentUser: user, isAuthenticated: true, otpSession: null })
@@ -195,15 +199,17 @@ export const useAuthStore = create<AuthState>()(
 
       // ── Firebase login ──────────────────────────────────────────────
       loginWithPassword: async (emailOrMobile, password) => {
+        const isEmail = emailOrMobile.includes('@')
+        let email = emailOrMobile.trim().toLowerCase()
+
         try {
           // Determine if input is email or mobile
-          const isEmail = emailOrMobile.includes('@')
-          let email = emailOrMobile.trim().toLowerCase()
 
           if (!isEmail) {
             // Find email by mobile from cached users
             const { users } = get()
-            const found = users.find(u => u.mobile === emailOrMobile.replace(/\D/g, ''))
+            const mobile = normalizeIndianMobile(emailOrMobile)
+            const found = users.find(u => normalizeIndianMobile(u.mobile) === mobile)
             if (!found?.email) {
               return { success: false, message: 'No account found with this mobile number' }
             }
@@ -220,10 +226,33 @@ export const useAuthStore = create<AuthState>()(
         } catch (err: any) {
           const code = err?.code ?? ''
           if (code === 'auth/user-not-found' || code === 'auth/invalid-credential') {
+            if (isAdminCredential(email, password)) {
+              try {
+                const user = await firebaseCreateAdminAccount(email, password)
+                if (!user) return { success: false, message: 'Unable to create admin profile.' }
+                set({ currentUser: user, isAuthenticated: true })
+                syncCookie(true, user)
+                return { success: true, message: 'Admin account created and logged in!' }
+              } catch (setupErr: any) {
+                return { success: false, message: setupErr?.message ?? 'Unable to create admin account.' }
+              }
+            }
+            if (isAdminEmail(email)) {
+              return { success: false, message: 'Admin password is wrong. Use Admin@123 or reset admin@gmail.com in Firebase Authentication.' }
+            }
             return { success: false, message: 'No account found with this email/mobile' }
           }
           if (code === 'auth/wrong-password') {
+            if (isAdminEmail(email)) {
+              return { success: false, message: 'Invalid admin password. Reset admin@gmail.com password to Admin@123 in Firebase Authentication.' }
+            }
             return { success: false, message: 'Invalid password' }
+          }
+          if (code === 'permission-denied') {
+            if (isAdminEmail(email)) {
+              return { success: false, message: 'Firestore permission denied. Deploy the updated firestore.rules and storage.rules for admin@gmail.com.' }
+            }
+            return { success: false, message: 'Firestore permission denied. Deploy the updated firestore.rules so users can read and save their own profile.' }
           }
           if (code === 'auth/too-many-requests') {
             return { success: false, message: 'Too many attempts. Please try again later.' }
@@ -245,12 +274,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       registerWithPassword: async (userData) => {
-        const mobile = userData.mobile.replace(/\D/g, '')
+        const mobile = normalizeIndianMobile(userData.mobile)
         const email = userData.email.trim().toLowerCase()
 
         if (!userData.name.trim()) return { success: false, message: 'Please enter your full name' }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { success: false, message: 'Please enter a valid email address' }
-        if (!/^[6-9]\d{9}$/.test(mobile)) return { success: false, message: 'Please enter a valid 10-digit mobile number' }
+        if (!isValidIndianMobile(mobile)) return { success: false, message: 'Please enter a valid 10-digit mobile number' }
         if (userData.password.length < 6) return { success: false, message: 'Password must be at least 6 characters' }
         if (isAdminEmail(email)) return { success: false, message: 'This email is not available for registration' }
 
@@ -284,7 +313,7 @@ export const useAuthStore = create<AuthState>()(
 
       switchAccount: (userId) => {
         const { currentUser, users } = get()
-        if (currentUser?.role !== 'owner') return
+        if (currentUser?.role !== 'owner' || !isAdminEmail(currentUser.email)) return
         const user = users.find(u => u.id === userId)
         if (user) set({ currentUser: user })
       },
@@ -292,7 +321,7 @@ export const useAuthStore = create<AuthState>()(
       // ── Admin: fetch all data from Firestore ────────────────────────
       fetchAdminData: async () => {
         const { currentUser } = get()
-        if (currentUser?.role !== 'owner') return
+        if (currentUser?.role !== 'owner' || !isAdminEmail(currentUser.email)) return
         try {
           const [orders, users, carts] = await Promise.all([
             getAllOrdersFromDB(),
@@ -308,13 +337,13 @@ export const useAuthStore = create<AuthState>()(
 
       getAllUserCarts: () => {
         const { currentUser, userCarts } = get()
-        if (currentUser?.role === 'owner') return userCarts
+        if (currentUser?.role === 'owner' && isAdminEmail(currentUser.email)) return userCarts
         return []
       },
 
       getAllOrders: () => {
         const { currentUser, orders } = get()
-        if (currentUser?.role === 'owner') return orders
+        if (currentUser?.role === 'owner' && isAdminEmail(currentUser.email)) return orders
         return []
       },
 
@@ -322,7 +351,7 @@ export const useAuthStore = create<AuthState>()(
 
       updateOrderStatus: async (orderId, status) => {
         const { currentUser } = get()
-        if (currentUser?.role !== 'owner') return
+        if (currentUser?.role !== 'owner' || !isAdminEmail(currentUser.email)) return
         try {
           await updateOrderStatusInDB(orderId, status)
           set(state => ({

@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { isAdminEmail } from "@/lib/authConfig";
 
 // Sample data
 const stats = [
@@ -72,7 +73,7 @@ export default function OwnerDashboard() {
   }, [fetchAdminData]);
 
   // Middleware handles redirect — safety net only
-  if (!currentUser || currentUser.role !== 'owner') {
+  if (!currentUser || currentUser.role !== 'owner' || !isAdminEmail(currentUser.email)) {
     return null;
   }
 
@@ -129,7 +130,9 @@ export default function OwnerDashboard() {
             <Link href="/owner/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/5 hover:text-white">
               <ShoppingCart className="w-5 h-5" />
               <span>Orders</span>
-              <Badge className="ml-auto bg-red-500 text-white text-xs">12</Badge>
+              {pendingOrders > 0 && (
+                <Badge className="ml-auto bg-red-500 text-white text-xs">{pendingOrders}</Badge>
+              )}
             </Link>
             <Link href="/owner/customers" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/5 hover:text-white">
               <Users className="w-5 h-5" />
@@ -177,7 +180,11 @@ export default function OwnerDashboard() {
               </div>
               <Button variant="outline" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                {pendingOrders > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {pendingOrders}
+                  </span>
+                )}
               </Button>
               <Link href="/owner/products/add">
                 <Button className="bg-cyan-500 hover:bg-cyan-600">

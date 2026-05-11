@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "./product-card";
-import { products } from "@/lib/data";
 import { Product } from "@/lib/store";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useStorefrontProducts } from "@/lib/storefrontProducts";
 
 interface ProductGridProps {
   title?: string;
@@ -30,6 +30,7 @@ export function ProductGrid({
   viewAllLink = "/shop",
   columns = 4,
 }: ProductGridProps) {
+  const { products } = useStorefrontProducts();
   const filteredProducts = filter
     ? products.filter(filter).slice(0, limit)
     : products.slice(0, limit);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BarChart3, Home, Mail, MapPin, Package, Phone, Settings, ShoppingCart, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/useAuthStore";
+import { isAdminEmail } from "@/lib/authConfig";
 
 export default function OwnerCustomersPage() {
   const { currentUser, users, getAllOrders, fetchAdminData } = useAuthStore();
@@ -13,7 +14,7 @@ export default function OwnerCustomersPage() {
     fetchAdminData();
   }, [fetchAdminData]);
 
-  if (!currentUser || currentUser.role !== "owner") return null;
+  if (!currentUser || currentUser.role !== "owner" || !isAdminEmail(currentUser.email)) return null;
 
   const orders = getAllOrders();
   const customers = users

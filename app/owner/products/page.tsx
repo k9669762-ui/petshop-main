@@ -30,7 +30,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/useAuthStore";
-import { getAllProductsFromDB, deleteProductFromDB, type DBProduct } from "@/lib/firebaseService";
+import { isAdminEmail } from "@/lib/authConfig";
+import { deleteProductFromDB, type DBProduct } from "@/lib/firebaseService";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const statusColors: Record<string, string> = {
   "Active": "bg-green-100 text-green-700",
@@ -41,20 +44,42 @@ const statusColors: Record<string, string> = {
 export default function ProductsPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentUser, logout } = useAuthStore();
+  const { currentUser, logout, getAllOrders, fetchAdminData } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getAllProductsFromDB()
-      .then(setProducts)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    if (currentUser?.role === 'owner' && isAdminEmail(currentUser.email)) {
+      fetchAdminData();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!currentUser || currentUser.role !== 'owner') return null;
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'owner' || !isAdminEmail(currentUser.email)) {
+      setLoading(false);
+      return;
+    }
+
+    // Real-time listener — updates instantly when stock changes after orders
+    const unsub = onSnapshot(
+      collection(db, 'products'),
+      (snap) => {
+        const data = snap.docs.map((d) => ({ ...d.data(), id: d.id } as DBProduct))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setProducts(data);
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
+
+    return () => unsub();
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!currentUser || currentUser.role !== 'owner' || !isAdminEmail(currentUser.email)) return null;
+
+  const pendingOrders = getAllOrders().filter((order) => order.status === "pending" || order.status === "processing").length;
 
   const handleLogout = async () => { await logout(); router.push('/'); };
 
@@ -125,7 +150,9 @@ export default function ProductsPage() {
             <Link href="/owner/orders" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/5 hover:text-white">
               <ShoppingCart className="w-5 h-5" />
               <span>Orders</span>
-              <Badge className="ml-auto bg-red-500 text-white text-xs">12</Badge>
+              {pendingOrders > 0 && (
+                <Badge className="ml-auto bg-red-500 text-white text-xs">{pendingOrders}</Badge>
+              )}
             </Link>
             <Link href="/owner/customers" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-white/5 hover:text-white">
               <Users className="w-5 h-5" />
@@ -249,7 +276,12 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600 capitalize">{product.category}</td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-800">₹{product.price.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{product.stock}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {product.stock}
+                        {product.subcategory === 'Food' && product.weightValue
+                          ? <span className="ml-1 text-xs text-gray-400">({product.weightValue}{product.weightUnit})</span>
+                          : null}
+                      </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[getStatus(product)]}`}>
                           {getStatus(product)}

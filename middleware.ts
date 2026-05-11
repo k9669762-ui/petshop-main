@@ -38,14 +38,14 @@ export function middleware(request: NextRequest) {
 
   // ── /owner/* ──────────────────────────────────────────────
   if (pathname.startsWith('/owner/login')) {
-    if (role === 'owner') {
+    if (hasAdminAccess) {
       return NextResponse.redirect(new URL('/owner/dashboard', request.url))
     }
     return NextResponse.next()
   }
 
   if (pathname.startsWith('/owner')) {
-    if (role !== 'owner') {
+    if (!hasAdminAccess) {
       const url = new URL('/owner/login', request.url)
       url.searchParams.set('from', pathname)
       return NextResponse.redirect(url)
@@ -56,7 +56,7 @@ export function middleware(request: NextRequest) {
   // ── /auth/signin & /auth/register ─────────────────────────
   if (pathname === '/auth/signin' || pathname === '/auth/register') {
     if (auth?.isAuthenticated) {
-      if (role === 'owner') return NextResponse.redirect(new URL('/owner/dashboard', request.url))
+      if (hasAdminAccess) return NextResponse.redirect(new URL('/owner/dashboard', request.url))
       return NextResponse.redirect(new URL('/account', request.url))
     }
     return NextResponse.next()

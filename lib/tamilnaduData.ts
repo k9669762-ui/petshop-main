@@ -113,9 +113,11 @@ export function isValidTamilNaduPincode(pincode: string): boolean {
   return tamilNaduPincodeRanges.some(range => pin >= range.start && pin <= range.end)
 }
 
-export function isValidIndianMobile(mobile: string): boolean {
-  // Indian mobile numbers start with 6, 7, 8, or 9 and are 10 digits
-  const mobileRegex = /^[6-9]\d{9}$/
-  return mobileRegex.test(mobile)
+export function normalizeIndianMobile(mobile: string): string {
+  const digits = mobile.replace(/\D/g, '')
+  return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits
 }
 
+export function isValidIndianMobile(mobile: string): boolean {
+  return /^\d{10}$/.test(normalizeIndianMobile(mobile))
+}

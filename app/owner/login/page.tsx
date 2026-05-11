@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/store/useAuthStore";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { isAdminEmail } from "@/lib/authConfig";
 
 export default function OwnerLoginPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function OwnerLoginPage() {
 
     const trimmedEmail = formData.email.trim().toLowerCase();
 
-    if (trimmedEmail !== "admin@bowpow.com") {
+    if (!isAdminEmail(trimmedEmail)) {
       setError("Access denied. Invalid owner account.");
       setIsLoading(false);
       return;
@@ -42,7 +43,7 @@ export default function OwnerLoginPage() {
     }
 
     const user = useAuthStore.getState().currentUser;
-    if (user?.role !== "owner") {
+    if (user?.role !== "owner" || !isAdminEmail(user.email)) {
       setError("Access denied. Owner account required.");
       await useAuthStore.getState().logout();
       setIsLoading(false);

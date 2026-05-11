@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/store/useAuthStore";
+import { isAdminEmail } from "@/lib/authConfig";
 import { addProductToDB, createSlug, uploadProductImage } from "@/lib/firebaseService";
 
 const categories = [
@@ -33,10 +34,13 @@ export default function AddProductPage() {
     name: "", description: "", category: "", subcategory: "",
     price: "", originalPrice: "", stock: "", sku: "",
     isNew: true, isFeatured: false, variants: [] as string[],
+    weightValue: "", weightUnit: "g" as "g" | "kg",
   });
   const [newVariant, setNewVariant] = useState("");
 
-  if (!currentUser || currentUser.role !== "owner") return null;
+  const isFoodProduct = formData.subcategory === "Food";
+
+  if (!currentUser || currentUser.role !== "owner" || !isAdminEmail(currentUser.email)) return null;
 
   const currentCategory = categories.find(c => c.id === formData.category);
 
@@ -79,11 +83,16 @@ export default function AddProductPage() {
     }
     setIsSubmitting(true);
     try {
+      // Upload images — if CORS not configured yet, skip images and save product anyway
       let uploadedUrls: string[] = [];
       if (imageFiles.length > 0) {
-        uploadedUrls = await Promise.all(
-          imageFiles.map(file => uploadProductImage(file, formData.name))
-        );
+        try {
+          uploadedUrls = await Promise.all(
+            imageFiles.map(file => uploadProductImage(file, formData.name))
+          );
+        } catch {
+          toast({ title: "Image upload failed", description: "Product will be saved without images. Fix Storage CORS to enable uploads.", variant: "destructive" });
+        }
       }
 
       await addProductToDB({
@@ -101,6 +110,9 @@ export default function AddProductPage() {
         isFeatured: formData.isFeatured,
         variants: formData.variants,
         inStock: Number(formData.stock) > 0,
+        ...(isFoodProduct && formData.weightValue
+          ? { weightValue: Number(formData.weightValue), weightUnit: formData.weightUnit }
+          : {}),
       });
 
       toast({ title: "Product Added! ✅", description: `${formData.name} has been saved to database.` });
@@ -189,7 +201,9 @@ export default function AddProductPage() {
                       <div>
                         <Label htmlFor="subcategory">Subcategory</Label>
                         <select id="subcategory" className="w-full mt-1.5 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                          value={formData.subcategory} onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })} disabled={!formData.category}>
+                          value={formData.subcategory}
+                          onChange={(e) => setFormData({ ...formData, subcategory: e.target.value, weightValue: "", weightUnit: "g" })}
+                          disabled={!formData.category}>
                           <option value="">Select Subcategory</option>
                           {currentCategory?.subcategories.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                         </select>
@@ -242,6 +256,31 @@ export default function AddProductPage() {
                       <Input id="sku" placeholder="e.g. FISH-BETTA-001" className="mt-1.5"
                         value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} />
                     </div>
+                    {isFoodProduct && (
+                      <div className="sm:col-span-2">
+                        <Label htmlFor="weightValue">Weight / Quantity</Label>
+                        <div className="flex gap-2 mt-1.5">
+                          <Input
+                            id="weightValue"
+                            type="number"
+                            placeholder="e.g. 500"
+                            className="flex-1"
+                            value={formData.weightValue}
+                            onChange={(e) => setFormData({ ...formData, weightValue: e.target.value })}
+                            required={isFoodProduct}
+                          />
+                          <select
+                            className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 w-24"
+                            value={formData.weightUnit}
+                            onChange={(e) => setFormData({ ...formData, weightUnit: e.target.value as "g" | "kg" })}
+                          >
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                          </select>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">Enter the net weight of the food product</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

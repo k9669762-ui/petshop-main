@@ -29,6 +29,7 @@ import { categories } from "@/lib/data";
 import { birdsAndFishCategory } from "@/lib/birdsAndFishData";
 import { cn } from "@/lib/utils";
 import { CartDrawer } from "./cart-drawer";
+import { isAdminEmail } from "@/lib/authConfig";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -61,6 +62,7 @@ export function Navigation() {
   const { items: wishlistItems } = useWishlistStore();
   const { isMobileMenuOpen, toggleMobileMenu, searchQuery, setSearchQuery } = useUIStore();
   const { isAuthenticated, currentUser } = useAuthStore();
+  const hasAdminAccess = currentUser?.role === 'owner' && isAdminEmail(currentUser.email);
   const prefetchedRoutes = useRef(new Set<string>());
 
   useEffect(() => {
@@ -451,7 +453,7 @@ export function Navigation() {
                     {isAuthenticated && (
                       <>
                         <div className="border-t my-1"></div>
-                        {currentUser?.role === 'owner' ? (
+                        {hasAdminAccess ? (
                           <Link href="/owner/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-700">
                             <User className="w-4 h-4" />
                             Owner Dashboard
@@ -616,7 +618,7 @@ export function Navigation() {
                   {isAuthenticated && currentUser ? (
                     <Link
                       href={
-                        currentUser.role === 'owner' ? '/owner/dashboard'
+                        hasAdminAccess ? '/owner/dashboard'
                         : '/account'
                       }
                       onClick={toggleMobileMenu}

@@ -1,40 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isAdminEmail() {
-      return isSignedIn() &&
-        request.auth.token.email == 'admin@bowpow.com';
-    }
-
     function isOwner() {
-      return isAdminEmail() ||
-        (isSignedIn() &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner');
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
     }
 
+    // Products — public read, owner write/delete
     match /products/{productId} {
       allow read: if true;
-      allow write: if isOwner();
+      allow write, delete: if isOwner();
     }
 
+    // Users — each user reads/writes own doc, owner reads/writes all
     match /users/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
       allow read, write: if isOwner();
     }
 
+    // Orders — signed-in users create, read/update own orders, owner full access
     match /orders/{orderId} {
       allow create: if isSignedIn();
       allow read, update: if isSignedIn() &&
         (resource.data.userId == request.auth.uid || isOwner());
+      allow write, delete: if isOwner();
     }
 
+    // Carts — each user reads/writes own cart, owner reads all
     match /carts/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
-      allow read: if isOwner();
+      allow read, write: if isOwner();
     }
   }
 }

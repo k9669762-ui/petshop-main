@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { 
@@ -24,6 +24,7 @@ export default function AdminDashboard() {
     getAllUserCarts, 
     getAllOrders,
     updateOrderStatus,
+    fetchAdminData,
     users,
     switchAccount
   } = useAuthStore()
@@ -33,6 +34,12 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false)
+
+  useEffect(() => {
+    if (currentUser?.role === 'owner' && isAdminEmail(currentUser.email)) {
+      fetchAdminData()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Protect route — middleware handles redirect, this is a safety net
   if (!currentUser || currentUser.role !== 'owner' || !isAdminEmail(currentUser.email)) {
@@ -45,6 +52,8 @@ export default function AdminDashboard() {
   // Stats
   const totalRevenue = orders.filter(o => o.paymentStatus === 'paid').reduce((sum, o) => sum + o.total, 0)
   const pendingOrders = orders.filter(o => o.status === 'pending').length
+  const processingOrders = orders.filter(o => o.status === 'processing').length
+  const openNotifications = pendingOrders + processingOrders
   const totalOrders = orders.length
   const activeUsers = users.filter(u => u.role === 'user').length
 
@@ -164,6 +173,29 @@ export default function AdminDashboard() {
               </div>
 
               {/* Logout */}
+              <button
+                onClick={() => fetchAdminData()}
+                className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Refresh data"
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span className="text-sm font-medium hidden sm:inline">Refresh</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('orders')}
+                className="relative flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Open order notifications"
+              >
+                <Clock className="w-5 h-5" />
+                <span className="text-sm font-medium hidden sm:inline">Notifications</span>
+                {openNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {openNotifications}
+                  </span>
+                )}
+              </button>
+
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

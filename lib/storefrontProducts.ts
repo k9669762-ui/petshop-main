@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
-import { products as localProducts } from "./data";
 import type { Product } from "./store";
 import type { DBProduct } from "./firebaseService";
 import { FIREBASE_PRODUCT_TAG } from "./productLinks";
@@ -97,20 +96,8 @@ export const mapDBProductToStorefrontProduct = (product: DBProduct): Product => 
 };
 
 const mergeProducts = (firebaseProducts: Product[]) => {
-  const merged = new Map<string, Product>();
-
-  firebaseProducts.forEach((product) => {
-    merged.set(product.slug || product.id, product);
-  });
-
-  localProducts.forEach((product) => {
-    const key = product.slug || product.id;
-    if (!merged.has(key)) {
-      merged.set(key, product);
-    }
-  });
-
-  return Array.from(merged.values());
+  // Only show Firebase products — no local static products
+  return firebaseProducts;
 };
 
 export function useStorefrontProducts() {
@@ -118,17 +105,25 @@ export function useStorefrontProducts() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const productsQuery = query(collection(db, "products"), orderBy("createdAt", "desc"));
+    // No orderBy to avoid composite index requirement
+    const productsQuery = collection(db, "products");
 
     const unsubscribe = onSnapshot(
       productsQuery,
       (snapshot) => {
-        const products = snapshot.docs.map((docSnap) =>
-          mapDBProductToStorefrontProduct({
-            ...(docSnap.data() as Omit<DBProduct, "id">),
-            id: docSnap.id,
-          } as DBProduct)
-        );
+        const products = snapshot.docs
+          .map((docSnap) =>
+            mapDBProductToStorefrontProduct({
+              ...(docSnap.data() as Omit<DBProduct, "id">),
+              id: docSnap.id,
+            } as DBProduct)
+          )
+          .sort((a, b) => {
+            // Featured first, then by name
+            if (a.isFeatured && !b.isFeatured) return -1;
+            if (!a.isFeatured && b.isFeatured) return 1;
+            return a.name.localeCompare(b.name);
+          });
 
         setFirebaseProducts(products);
         setIsLoading(false);

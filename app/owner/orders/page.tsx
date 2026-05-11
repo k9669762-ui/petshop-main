@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore, type Order } from "@/store/useAuthStore";
+import { isAdminEmail } from "@/lib/authConfig";
 
 const statusConfig: Record<Order["status"], { color: string; icon: any; bgColor: string }> = {
   pending: { color: "text-gray-700", icon: Clock, bgColor: "bg-gray-100" },
@@ -62,9 +63,9 @@ export default function OrdersPage() {
 
   useEffect(() => {
     fetchAdminData();
-  }, [fetchAdminData]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!currentUser || currentUser.role !== "owner") {
+  if (!currentUser || currentUser.role !== "owner" || !isAdminEmail(currentUser.email)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-900">
         <motion.div

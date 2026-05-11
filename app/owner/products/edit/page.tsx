@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/store/useAuthStore";
+import { isAdminEmail } from "@/lib/authConfig";
 import { createSlug, getProductFromDB, updateProductInDB, type DBProduct } from "@/lib/firebaseService";
 
 const categories = [
@@ -38,6 +39,11 @@ function EditProductContent() {
   });
 
   useEffect(() => {
+    if (!currentUser || currentUser.role !== "owner" || !isAdminEmail(currentUser.email)) {
+      setLoading(false);
+      return;
+    }
+
     if (!productId) {
       setLoading(false);
       return;
@@ -63,9 +69,9 @@ function EditProductContent() {
         toast({ title: "Unable to load product", description: err?.message ?? "Please try again.", variant: "destructive" });
       })
       .finally(() => setLoading(false));
-  }, [productId]);
+  }, [currentUser, productId]);
 
-  if (!currentUser || currentUser.role !== "owner") return null;
+  if (!currentUser || currentUser.role !== "owner" || !isAdminEmail(currentUser.email)) return null;
 
   const currentCategory = categories.find((category) => category.id === formData.category);
 

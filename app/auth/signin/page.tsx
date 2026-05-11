@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { useAuthStore } from "@/store/useAuthStore";
+import { isAdminEmail } from "@/lib/authConfig";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function SignInPage() {
 
       const currentUser = useAuthStore.getState().currentUser;
 
-      if (currentUser?.role === "owner") {
+      if (currentUser?.role === "owner" && isAdminEmail(currentUser.email)) {
         router.push("/owner/dashboard");
         return;
       }

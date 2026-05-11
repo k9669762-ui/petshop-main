@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { BarChart3, Home, Package, Settings, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import { isAdminEmail } from "@/lib/authConfig";
+import { useAuthStore } from "@/store/useAuthStore";
 
 const metrics = [
   { label: "Monthly Revenue", value: "Rs. 2,45,890", change: "+12.5%" },
@@ -10,6 +12,10 @@ const metrics = [
 ];
 
 export default function OwnerReportsPage() {
+  const currentUser = useAuthStore((state) => state.currentUser);
+
+  if (!currentUser || currentUser.role !== "owner" || !isAdminEmail(currentUser.email)) return null;
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-6xl px-4 py-8">
