@@ -93,7 +93,7 @@ export default function CheckoutPage() {
         productImage: item.product.images?.[0] ?? '',
         price: item.product.price ?? 0,
         quantity: item.quantity ?? 1,
-        ...(item.selectedVariants && Object.keys(item.selectedVariants).length > 0
+        ...('selectedVariants' in item && item.selectedVariants && Object.keys(item.selectedVariants).length > 0
           ? { variant: Object.values(item.selectedVariants).join(', ') }
           : {}),
       }));
