@@ -43,11 +43,7 @@ const subcategoryMap: Record<string, string> = {
 };
 
 const normalizeKey = (value?: string) =>
-  (value ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ");
+  (value ?? "").toLowerCase().trim().replace(/[-_]+/g, " ").replace(/\s+/g, " ");
 
 const normalizeCategory = (value?: string) => {
   const key = normalizeKey(value);
@@ -95,49 +91,63 @@ export const mapDBProductToStorefrontProduct = (product: DBProduct): Product => 
   };
 };
 
-const mergeProducts = (firebaseProducts: Product[]) => {
-  // Only show Firebase products — no local static products
-  return firebaseProducts;
-};
+// ── Module-level singleton cache ──────────────────────────────────────
+// onSnapshot runs only ONCE across all pages — no duplicate Firestore listeners
+let cachedProducts: Product[] = [];
+let cacheLoaded = false;
+let listeners: Array<(p: Product[]) => void> = [];
+let unsubFirestore: (() => void) | null = null;
+
+function subscribeToProducts() {
+  if (unsubFirestore) return; // already listening
+  unsubFirestore = onSnapshot(
+    collection(db, "products"),
+    (snapshot) => {
+      cachedProducts = snapshot.docs
+        .map((docSnap) =>
+          mapDBProductToStorefrontProduct({
+            ...(docSnap.data() as Omit<DBProduct, "id">),
+            id: docSnap.id,
+          } as DBProduct)
+        )
+        .sort((a, b) => {
+          if (a.isFeatured && !b.isFeatured) return -1;
+          if (!a.isFeatured && b.isFeatured) return 1;
+          return a.name.localeCompare(b.name);
+        });
+      cacheLoaded = true;
+      listeners.forEach((fn) => fn(cachedProducts));
+    },
+    () => {
+      cacheLoaded = true;
+      listeners.forEach((fn) => fn([]));
+    }
+  );
+}
 
 export function useStorefrontProducts() {
-  const [firebaseProducts, setFirebaseProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(cachedProducts);
+  const [isLoading, setIsLoading] = useState(!cacheLoaded);
 
   useEffect(() => {
-    // No orderBy to avoid composite index requirement
-    const productsQuery = collection(db, "products");
+    // If already loaded from cache, skip loading state
+    if (cacheLoaded) {
+      setProducts(cachedProducts);
+      setIsLoading(false);
+      return;
+    }
 
-    const unsubscribe = onSnapshot(
-      productsQuery,
-      (snapshot) => {
-        const products = snapshot.docs
-          .map((docSnap) =>
-            mapDBProductToStorefrontProduct({
-              ...(docSnap.data() as Omit<DBProduct, "id">),
-              id: docSnap.id,
-            } as DBProduct)
-          )
-          .sort((a, b) => {
-            // Featured first, then by name
-            if (a.isFeatured && !b.isFeatured) return -1;
-            if (!a.isFeatured && b.isFeatured) return 1;
-            return a.name.localeCompare(b.name);
-          });
+    const handler = (p: Product[]) => {
+      setProducts(p);
+      setIsLoading(false);
+    };
+    listeners.push(handler);
+    subscribeToProducts();
 
-        setFirebaseProducts(products);
-        setIsLoading(false);
-      },
-      () => {
-        setFirebaseProducts([]);
-        setIsLoading(false);
-      }
-    );
-
-    return unsubscribe;
+    return () => {
+      listeners = listeners.filter((fn) => fn !== handler);
+    };
   }, []);
-
-  const products = useMemo(() => mergeProducts(firebaseProducts), [firebaseProducts]);
 
   return { products, isLoading };
 }

@@ -4,7 +4,7 @@ const isProductionBuild = process.env.NODE_ENV === 'production'
 const nextConfig = {
   output: isProductionBuild ? 'export' : undefined,
   trailingSlash: isProductionBuild,
-  reactStrictMode: true,
+  reactStrictMode: false, // strict mode causes double renders in dev — slows navigation
   compiler: {
     removeConsole: isProductionBuild ? { exclude: ['error'] } : false,
   },
@@ -26,7 +26,11 @@ const nextConfig = {
       '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-select',
       '@radix-ui/react-tabs',
+      '@radix-ui/react-toast',
+      '@radix-ui/react-checkbox',
+      '@radix-ui/react-slider',
       'swiper',
+      'firebase',
     ],
   },
 }

@@ -3,27 +3,35 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
+const SHOWN_KEY = 'rinbow-loader-shown'
+
 export default function InitialLoader({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 250 : 900
+    // Only show loader on very first visit per session
+    if (sessionStorage.getItem(SHOWN_KEY)) {
+      setIsLoading(false)
+      return
+    }
+    sessionStorage.setItem(SHOWN_KEY, '1')
+    setIsLoading(true)
+
+    const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 200 : 900
     const startTime = Date.now()
-    
+
     const updateProgress = () => {
       const elapsed = Date.now() - startTime
       const newProgress = Math.min((elapsed / duration) * 100, 100)
       setProgress(newProgress)
-
       if (newProgress < 100) {
         requestAnimationFrame(updateProgress)
       } else {
-        setTimeout(() => setIsLoading(false), 120)
+        setTimeout(() => setIsLoading(false), 100)
       }
     }
-
     requestAnimationFrame(updateProgress)
   }, [])
 
